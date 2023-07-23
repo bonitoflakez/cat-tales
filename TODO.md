@@ -1,35 +1,24 @@
 # TODO List
 
-1. **Cat Types and Rarity**
-   - [x] Define the characteristics and traits for each cat type: Common, Uncommon, Rare, Epic, Legendary, Rarest-of-All.
-   - [x] Design unique id for each cat type to represent their rarity.
-
-2. **Cat Collection and Ownership**
-   - [x] Implement the functionality for players to own and manage multiple cats.
-   - [x] Display owned cats' details in the user profile, including type, rarity tag, level, and unique charm.
-   - [x] Create an in-game store to allow players to adopt or purchase new cats of different types and rarities.
-   - [ ] Create am in-game store that allows players to purchase new cats of different types and rarities.
-
-3. **Cat Upgrades and Progression**
-   - [ ] Develop the feeding mechanics to increase a cat's XP and happiness over time.
-   - [ ] Implement playtime interactions to improve the player-cat relationship and earn additional bonuses.
-   - [ ] Design and introduce special consumable items to provide temporary buffs or unlock unique abilities for cats.
-   - [ ] Implement regular grooming sessions to contribute to a cat's happiness and XP.
-
-4. **Inventory and Item Management**
-   - [ ] Create an inventory system to store various items, including cat food, grooming supplies, toys, and special consumables.
-   - [ ] Enable players to acquire items through quests, achievements, or in-game events.
-   - [ ] Allow players to use items on their cats directly from the inventory.
-
-5. **User Interaction and Social Features**
-   - [ ] Implement a unique username system for each player to identify and distinguish them in the game.
-   - [ ] Develop social interaction features, including adding friends and sharing items with other players.
-   - [ ] Implement in-game chat or message boards to facilitate communication and sharing experiences between players.
-
-6. **Leaderboards and Achievements**
-   - [ ] Create a leaderboard system to rank players based on their total XP or the rarest-of-all cats they own.
-   - [ ] Design a set of achievements for players to complete, rewarding them with special items or titles.
-
-7. **Microtransactions and Monetization**
-   - [ ] Set up a system for offering cosmetic items, unique charms, and exclusive accessories through microtransactions.
-   - [ ] Ensure that core gameplay and progression are not gated behind paywalls to maintain a fair experience for all players.
+- [x] Player can login and signup
+- [x] Player can own cats and items
+- [x] Drop random items and cats
+- [x] Cats will have level and rarity
+- [x] Items will have item type and rarity
+- [ ] Every player should have a unique userid
+- [ ] An in-game currency
+- [ ] Add a store where players can buy cats and items of different rarity using in-game currency
+- [ ] Develop an XP management system for users and each of the cat that the user owns
+- [ ] Develop the mechanism that allows player to use his inventory items to increase cat and player's XP/level over time
+- [ ] Design special consumable items to provide temporary buffs and unlock unique abilities for cats
+- [ ] Create a separate inventory system for each player to store items tat they collect/earn
+- [ ] Create a room-space for cats the user owns
+- [ ] Add quests and achievements and give user some kind of rewards through them
+- [ ] Add a social interaction feature that allows users to connect with each other
+  - [ ] Add friend
+  - [ ] Chat
+  - [ ] Co-Op quest
+- [ ] Create a leaderboard system to rank players based on their total XP or based on the number of cats they own
+- [ ] Create a title system that allows users to add titles to their profile and and show-off that they've completed some special quest
+- [ ] Create special title that can be obtained from completing special/hard quests
+- [ ] Set up a system for offering cosmetic items, unique charms, and exclusive accessories through microtransactions

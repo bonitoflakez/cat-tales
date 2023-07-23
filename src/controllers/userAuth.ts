@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt, { Secret } from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 import pool from "../models/db";
 
 const secretKey: Secret = "supersecuresecret";
@@ -10,9 +11,11 @@ export const signUp = async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const userId = uuidv4();
+
     const insertUserQuery =
-      "INSERT INTO userInfo (username, email, password) VALUES ($1, $2, $3) RETURNING *";
-    const insertUserValues = [username, email, hashedPassword];
+      "INSERT INTO userInfo (id, username, email, password) VALUES ($1, $2, $3, $4) RETURNING *";
+    const insertUserValues = [userId, username, email, hashedPassword];
 
     const {
       rows: [user],
@@ -35,8 +38,9 @@ export const signUp = async (req: Request, res: Response) => {
       });
 
       // Insert just the username into the players table
-      const insertPlayerQuery = "INSERT INTO players (username) VALUES ($1)";
-      const insertPlayerValues = [user.username];
+      const insertPlayerQuery =
+        "INSERT INTO players (id, username) VALUES ($1, $2)";
+      const insertPlayerValues = [user.id, user.username];
       await pool.query(insertPlayerQuery, insertPlayerValues);
 
       return res.status(201).send({
