@@ -4,7 +4,7 @@ import pool from "../models/db";
 export const getPlayerProfile = async (req: Request, res: Response) => {
   try {
     const { playerId } = req.params;
-    const playerQuery = "SELECT * FROM players WHERE id = $1";
+    const playerQuery = "SELECT * FROM players WHERE username = $1";
     const playerValues = [playerId];
     const playerResult = await pool.query(playerQuery, playerValues);
 

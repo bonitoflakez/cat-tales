@@ -1,34 +1,34 @@
 # Routes
 
-Get cats owned by user by their ID
+Get cats owned by user by their userId
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/player/getPlayerCat/1 | json
+➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/player/getPlayerCat/9bc25ce9-0f1c-4b0d-812c-085562d9a5cc | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100    72  100    72    0     0  12574      0 --:--:-- --:--:-- --:--:-- 14400
+100   109  100   109    0     0   4556      0 --:--:-- --:--:-- --:--:--  4739
 [
   {
     "id": 1,
-    "name": "chairo",
+    "name": "Chairo",
     "rarity": 2,
-    "level": 3,
+    "level": 2,
     "charm": null,
-    "ownerid": 1
+    "ownerid": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"
   }
 ]
 ```
 
-Get player by their ID
+Get player by their username
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/player/getPlayer/1 | json
+➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/player/getPlayer/ooga | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100    28  100    28    0     0   1359      0 --:--:-- --:--:-- --:--:--  1400
+100    65  100    65    0     0   1574      0 --:--:-- --:--:-- --:--:--  1585
 {
-  "id": 1,
-  "username": "bonito"
+  "username": "ooga",
+  "uuid": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"
 }
 ```
 
@@ -38,23 +38,23 @@ Drop a random cat
 ➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/cat/dropRandom | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100    49  100    49    0     0  14776      0 --:--:-- --:--:-- --:--:-- 24500
+100    49  100    49    0     0  11507      0 --:--:-- --:--:-- --:--:-- 16333
 {
   "type": {
     "typeId": 2,
     "type": "Uncommon"
   },
-  "level": 8
+  "level": 2
 }
 ```
 
 Adopt the cat
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/cat/adopt -d '{"name": "Yuki", "type": 2, "level": 8, "ownerId": 1}' -H 'Content-Type: application/json'  | json
+➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/cat/adopt -d '{"name": "Chairo", "type": 2, "level": 2, "ownerId": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"}' -H 'Content-Type: application/json'  | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100    91  100    38  100    53    734   1024 --:--:-- --:--:-- --:--:--  1784
+100   130  100    38  100    92   1225   2968 --:--:-- --:--:-- --:--:--  4333
 {
   "message": "Cat adopted successfully"
 }
@@ -66,16 +66,16 @@ Drop a random item
 ➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/item/dropRandom | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   119  100   119    0     0  34512      0 --:--:-- --:--:-- --:--:-- 39666
+100   125  100   125    0     0  17057      0 --:--:-- --:--:-- --:--:-- 20833
 {
   "type": {
-    "name": "Yummy Yogurt Drops",
-    "type": "Food",
-    "type_id": 1
+    "name": "Sparkling Crystal Pendant",
+    "type": "Charm",
+    "type_id": 3
   },
   "rarity": {
-    "item_rarity_id": 2,
-    "item_rarity": "Uncommon"
+    "item_rarity_id": 1,
+    "item_rarity": "Common"
   }
 }
 ```
@@ -83,11 +83,10 @@ Drop a random item
 Add dropped item to inventory
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/item/add -d '{"name": "Yummy Yogurt Drops", "type": 1, "rarity": 2, "ownerI
-d": 1}' -H 'Content-Type: application/json' | json
+➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/item/add -d '{"name": "Sparkling Crystal Pendant", "type": 3, "rarity": 1, "ownerId": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"}' -H 'Content-Type: application/json' | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   106  100    38  100    68   1637   2930 --:--:-- --:--:-- --:--:--  4818
+100   150  100    38  100   112    488   1439 --:--:-- --:--:-- --:--:--  1948
 {
   "message": "Item stored in inventory"
 }
@@ -96,17 +95,16 @@ d": 1}' -H 'Content-Type: application/json' | json
 Register a user
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/auth/signup -d '{"username": "testuser", "email": "testuser@gmail.com", "pa
-ssword": "passwd"}' -H 'Content-Type: application/json' | json
+➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/auth/signup -d '{"username": "ooga", "email": "testuser@gmail.com", "password": "passwd"}' -H 'Content-Type: application/json' | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   248  100   171  100    77   1450    653 --:--:-- --:--:-- --:--:--  2119
+100   212  100   139  100    73    863    453 --:--:-- --:--:-- --:--:--  1325
 {
   "authStatus": "user registered",
   "message": {
-    "username": "testuser",
+    "username": "ooga",
     "email": "testuser@gmail.com",
-    "hashedPass": "$2b$10$sG4le1WRyUE0Rc8enyRIeuJhz/iRCqsPYZrocOpda4CoFg00euZ/."
+    "userId": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"
   }
 }
 ```
@@ -114,17 +112,16 @@ ssword": "passwd"}' -H 'Content-Type: application/json' | json
 Login
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/auth/login -d '{"username": "testuser", "password": "passwd"}' -H 'Content-
-Type: application/json' | json
+➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/auth/login -d '{"username": "ooga", "password": "passwd"}' -H 'Content-Type: application/json' | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-100   212  100   166  100    46   2224    616 --:--:-- --:--:-- --:--:--  2864
+100   176  100   134  100    42   2138    670 --:--:-- --:--:-- --:--:--  2838
 {
   "authStatus": "authorized",
   "message": {
-    "username": "testuser",
+    "username": "ooga",
     "email": "testuser@gmail.com",
-    "hashedPass": "$2b$10$sG4le1WRyUE0Rc8enyRIeuJhz/iRCqsPYZrocOpda4CoFg00euZ/."
+    "userId": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"
   }
 }
 ```

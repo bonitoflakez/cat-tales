@@ -1,13 +1,17 @@
-CREATE TABLE userInfo (
-  id SERIAL PRIMARY KEY,
+-- CREATE SEQUENCE userinfo_id_seq START 1;
+CREATE TABLE userinfo (
+  -- id INTEGER PRIMARY KEY DEFAULT nextval('userinfo_id_seq'),
   username VARCHAR(100) NOT NULL UNIQUE,
   email VARCHAR(100) NOT NULL UNIQUE,
-  password VARCHAR(100) NOT NULL
+  password VARCHAR(100) NOT NULL,
+  uuid VARCHAR(100) NOT NULL UNIQUE
 );
 
+-- CREATE SEQUENCE players_id_seq START 1;
 CREATE TABLE players (
-  id SERIAL PRIMARY KEY,
-  username VARCHAR(100) NOT NULL
+  -- id INTEGER PRIMARY KEY DEFAULT nextval('players_id_seq'),
+  username VARCHAR(100) NOT NULL,
+  uuid VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE cat_types (
@@ -21,7 +25,7 @@ CREATE TABLE cats (
   rarity INTEGER REFERENCES cat_types(id),
   level INTEGER NOT NULL,
   charm VARCHAR(100),
-  ownerId INTEGER REFERENCES players(id)
+  ownerId VARCHAR(100) REFERENCES players(uuid)
 );
 
 CREATE TABLE item_types (
@@ -45,5 +49,5 @@ CREATE TABLE items (
   name VARCHAR(100) NOT NULL,
   type INTEGER REFERENCES item_types(id),
   rarity INTEGER REFERENCES item_rarity(id),
-  ownerId INTEGER REFERENCES players(id)
+  ownerId VARCHAR(100) REFERENCES players(uuid)
 );

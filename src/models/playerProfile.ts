@@ -1,4 +1,4 @@
 export interface PlayerProfile {
-  id: number;
+  id: string;
   username: string;
 }

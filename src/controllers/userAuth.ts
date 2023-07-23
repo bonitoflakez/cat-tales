@@ -14,8 +14,8 @@ export const signUp = async (req: Request, res: Response) => {
     const userId = uuidv4();
 
     const insertUserQuery =
-      "INSERT INTO userInfo (id, username, email, password) VALUES ($1, $2, $3, $4) RETURNING *";
-    const insertUserValues = [userId, username, email, hashedPassword];
+      "INSERT INTO userInfo (username, email, password, uuid) VALUES ($1, $2, $3, $4) RETURNING *";
+    const insertUserValues = [username, email, hashedPassword, userId];
 
     const {
       rows: [user],
@@ -24,7 +24,7 @@ export const signUp = async (req: Request, res: Response) => {
     if (user) {
       let token = jwt.sign(
         {
-          id: user.id,
+          id: user.uuid,
         },
         secretKey,
         {
@@ -39,8 +39,8 @@ export const signUp = async (req: Request, res: Response) => {
 
       // Insert just the username into the players table
       const insertPlayerQuery =
-        "INSERT INTO players (id, username) VALUES ($1, $2)";
-      const insertPlayerValues = [user.id, user.username];
+        "INSERT INTO players (username, uuid) VALUES ($1, $2)";
+      const insertPlayerValues = [user.username, userId];
       await pool.query(insertPlayerQuery, insertPlayerValues);
 
       return res.status(201).send({
@@ -48,7 +48,7 @@ export const signUp = async (req: Request, res: Response) => {
         message: {
           username: user.username,
           email: user.email,
-          hashedPass: user.password,
+          userId: user.uuid,
         },
       });
     } else {
@@ -80,7 +80,7 @@ export const login = async (req: Request, res: Response) => {
       if (isSame) {
         let token = jwt.sign(
           {
-            id: userData.id,
+            id: userData.uuid,
           },
           secretKey,
           {
@@ -98,7 +98,7 @@ export const login = async (req: Request, res: Response) => {
           message: {
             username: userData.username,
             email: userData.email,
-            hashedPass: userData.password,
+            userId: userData.uuid,
           },
         });
       } else {
