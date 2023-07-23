@@ -1,9 +1,12 @@
-import express from 'express';
-import { dropRandomItem, addDropItemToInventory } from '../controllers/itemDrop';
+import express from "express";
+import {
+  dropRandomItem,
+  addDropItemToInventory,
+} from "../controllers/itemDrop";
 
 const router = express.Router();
 
-router.get('/dropRandomItem', dropRandomItem);
-router.post('/addItemToInv', addDropItemToInventory);
+router.get("/dropRandom", dropRandomItem);
+router.post("/add", addDropItemToInventory);
 
 export default router;

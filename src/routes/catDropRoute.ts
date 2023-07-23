@@ -1,9 +1,9 @@
-import express from 'express';
-import { dropRandomCat, adoptCat } from '../controllers/catDropController';
+import express from "express";
+import { dropRandomCat, adoptCat } from "../controllers/catDropController";
 
 const router = express.Router();
 
-router.get('/dropRandomCat', dropRandomCat);
-router.post('/adoptCat', adoptCat);
+router.get("/dropRandom", dropRandomCat);
+router.post("/adopt", adoptCat);
 
 export default router;
