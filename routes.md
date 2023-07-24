@@ -1,9 +1,9 @@
 # Routes
 
-Get cats owned by user by their userId
+Get cats owned by user by their user_id
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/player/getPlayerCat/9bc25ce9-0f1c-4b0d-812c-085562d9a5cc | json
+➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/player/getPlayerCat/830de087-a3cf-4c44-ba70-e7d34e141203 | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100   109  100   109    0     0   4556      0 --:--:-- --:--:-- --:--:--  4739
@@ -14,7 +14,7 @@ Get cats owned by user by their userId
     "rarity": 2,
     "level": 2,
     "charm": null,
-    "ownerid": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"
+    "user_id": "830de087-a3cf-4c44-ba70-e7d34e141203"
   }
 ]
 ```
@@ -28,7 +28,7 @@ Get player by their username
 100    65  100    65    0     0   1574      0 --:--:-- --:--:-- --:--:--  1585
 {
   "username": "ooga",
-  "uuid": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"
+  "user_id": "830de087-a3cf-4c44-ba70-e7d34e141203"
 }
 ```
 
@@ -51,7 +51,7 @@ Drop a random cat
 Adopt the cat
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/cat/adopt -d '{"name": "Chairo", "type": 2, "level": 2, "ownerId": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"}' -H 'Content-Type: application/json'  | json
+➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/cat/adopt -d '{"name": "Chairo", "type": 2, "level": 2, "user_id": "830de087-a3cf-4c44-ba70-e7d34e141203"}' -H 'Content-Type: application/json'  | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100   130  100    38  100    92   1225   2968 --:--:-- --:--:-- --:--:--  4333
@@ -83,7 +83,7 @@ Drop a random item
 Add dropped item to inventory
 
 ```text
-➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/item/add -d '{"name": "Sparkling Crystal Pendant", "type": 3, "rarity": 1, "ownerId": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"}' -H 'Content-Type: application/json' | json
+➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/item/add -d '{"name": "Sparkling Crystal Pendant", "type": 3, "rarity": 1, "user_id": "830de087-a3cf-4c44-ba70-e7d34e141203"}' -H 'Content-Type: application/json' | json
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100   150  100    38  100   112    488   1439 --:--:-- --:--:-- --:--:--  1948
@@ -104,7 +104,7 @@ Register a user
   "message": {
     "username": "ooga",
     "email": "testuser@gmail.com",
-    "userId": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"
+    "userId": "830de087-a3cf-4c44-ba70-e7d34e141203"
   }
 }
 ```
@@ -121,7 +121,57 @@ Login
   "message": {
     "username": "ooga",
     "email": "testuser@gmail.com",
-    "userId": "9bc25ce9-0f1c-4b0d-812c-085562d9a5cc"
+    "userId": "830de087-a3cf-4c44-ba70-e7d34e141203"
   }
+}
+```
+
+Display items in store
+
+```text
+➜  cat-tales git:(main) ✗ curl -X GET http://localhost:8000/api/store/getItems | json
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  3640  100  3640    0     0   235k      0 --:--:-- --:--:-- --:--:--  253k
+{
+  "itemNames": [
+    {
+      "name": "Tasty Tuna Treats",
+      "type": "Food",
+      "type_id": 1,
+      "rarity": "Epic",
+      "rarity_id": 4,
+      "price": 40
+    },
+    {
+      "name": "Crunchy Chicken Bites",
+      "type": "Food",
+      "type_id": 1,
+      "rarity": "Rare",
+      "rarity_id": 3,
+      "price": 35
+    },
+    {
+      "name": "Savory Salmon Delight",
+      "type": "Food",
+      "type_id": 1,
+      "rarity": "Rare",
+      "rarity_id": 3,
+      "price": 32
+    },
+    ...
+  ]
+}
+```
+
+Buy store items
+
+```text
+➜  cat-tales git:(main) ✗ curl -X POST http://localhost:8000/api/store/buyItem -d '{"name": "Gentle Ear Cleaner", "type": 7, "rarity": 2, "price": 35, "user_id": "830de087-a3cf-4c44-ba70-e7d34e141203"}' -H 'Content-Type: application/json' | json
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   156  100    38  100   118    284    883 --:--:-- --:--:-- --:--:--  1172
+{
+  "message": "Item bought successfully"
 }
 ```

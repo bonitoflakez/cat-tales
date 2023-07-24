@@ -11,11 +11,11 @@ export const signUp = async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const userId = uuidv4();
+    const user_id = uuidv4();
 
     const insertUserQuery =
-      "INSERT INTO userInfo (username, email, password, uuid) VALUES ($1, $2, $3, $4) RETURNING *";
-    const insertUserValues = [username, email, hashedPassword, userId];
+      "INSERT INTO userInfo (username, email, password, user_id) VALUES ($1, $2, $3, $4) RETURNING *";
+    const insertUserValues = [username, email, hashedPassword, user_id];
 
     const {
       rows: [user],
@@ -24,7 +24,7 @@ export const signUp = async (req: Request, res: Response) => {
     if (user) {
       let token = jwt.sign(
         {
-          id: user.uuid,
+          id: user.user_id,
         },
         secretKey,
         {
@@ -37,18 +37,23 @@ export const signUp = async (req: Request, res: Response) => {
         httpOnly: true,
       });
 
-      // Insert just the username into the players table
       const insertPlayerQuery =
-        "INSERT INTO players (username, uuid) VALUES ($1, $2)";
-      const insertPlayerValues = [user.username, userId];
+        "INSERT INTO players (username, user_id) VALUES ($1, $2)";
+      const insertPlayerValues = [user.username, user_id];
       await pool.query(insertPlayerQuery, insertPlayerValues);
+
+      const insertCurrencyQuery =
+        "INSERT INTO currency (user_id, coins) VALUES ($1, $2)";
+      const insertCurrencyValues = [user_id, 100];
+      await pool.query(insertCurrencyQuery, insertCurrencyValues);
 
       return res.status(201).send({
         authStatus: "user registered",
         message: {
           username: user.username,
           email: user.email,
-          userId: user.uuid,
+          user_id: user.user_id,
+          coins: "100 coins added as signup reward",
         },
       });
     } else {
@@ -80,7 +85,7 @@ export const login = async (req: Request, res: Response) => {
       if (isSame) {
         let token = jwt.sign(
           {
-            id: userData.uuid,
+            id: userData.user_id,
           },
           secretKey,
           {
@@ -98,7 +103,7 @@ export const login = async (req: Request, res: Response) => {
           message: {
             username: userData.username,
             email: userData.email,
-            userId: userData.uuid,
+            user_id: userData.user_id,
           },
         });
       } else {

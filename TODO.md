@@ -6,8 +6,8 @@
 - [x] Cats will have level and rarity
 - [x] Items will have item type and rarity
 - [x] Every player should have a unique userid
-- [ ] An in-game currency
-- [ ] Add a store where players can buy cats and items of different rarity using in-game currency
+- [x] An in-game currency
+- [x] Add a store where players can buy cats and items of different rarity using in-game currency
 - [ ] Develop an XP management system for users and each of the cat that the user owns
 - [ ] Develop the mechanism that allows player to use his inventory items to increase cat and player's XP/level over time
 - [ ] Design special consumable items to provide temporary buffs and unlock unique abilities for cats

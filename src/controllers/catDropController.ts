@@ -1,29 +1,21 @@
 import { Request, Response } from "express";
 import pool from "../models/db";
+import { rarities } from "../constants/itemRarity";
 
 function generateCatType() {
-  const types = [
-    { typeId: 1, type: "Common", weight: 10 },
-    { typeId: 2, type: "Uncommon", weight: 10 },
-    { typeId: 3, type: "Rare", weight: 8 },
-    { typeId: 4, type: "Epic", weight: 5 },
-    { typeId: 5, type: "Legendary", weight: 2 },
-    { typeId: 6, type: "Godlike", weight: 1 },
-  ];
-
-  const totalWeight = types.reduce((sum, type) => sum + type.weight, 0);
+  const totalWeight = rarities.reduce((sum, rarity) => sum + rarity.weight, 0);
 
   const randomNumber = Math.floor(Math.random() * totalWeight) + 1;
 
   let cumulativeWeight = 0;
-  for (const type of types) {
-    cumulativeWeight += type.weight;
+  for (const rarity of rarities) {
+    cumulativeWeight += rarity.weight;
     if (randomNumber <= cumulativeWeight) {
-      return { typeId: type.typeId, type: type.type };
+      return { typeId: rarity.id, type: rarity.itemRarity };
     }
   }
 
-  return { typeId: types[0].typeId, type: types[0].type };
+  return { typeId: rarities[0].id, type: rarities[0].itemRarity };
 }
 
 function generateCatLevel() {
@@ -46,7 +38,7 @@ export const dropRandomCat = async (req: Request, res: Response) => {
 
 export const adoptCat = async (req: Request, res: Response) => {
   try {
-    const { name, type, level, ownerId } = req.body;
+    const { name, type, level, user_id } = req.body;
 
     if (!name) {
       return res
@@ -55,8 +47,8 @@ export const adoptCat = async (req: Request, res: Response) => {
     }
 
     const insertQuery =
-      "INSERT INTO cats (name, rarity, level, ownerId) VALUES ($1, $2, $3, $4)";
-    const values = [name, type, level, ownerId];
+      "INSERT INTO cats (name, rarity, level, user_id) VALUES ($1, $2, $3, $4)";
+    const values = [name, type, level, user_id];
     await pool.query(insertQuery, values);
 
     return res.status(201).json({ message: "Cat adopted successfully" });
