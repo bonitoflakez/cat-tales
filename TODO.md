@@ -9,7 +9,8 @@
 - [x] An in-game currency
 - [x] Add a store where players can buy cats and items of different rarity using in-game currency
 - [x] Develop an XP management system for users and each of the cat that the user owns
-- [ ] Develop the mechanism that allows player to use his inventory items to increase cat and player's XP/level over time
+- [x] Players will gain XP on opening item drop or adopting a cat from cat drop
+- [ ] Develop the mechanism that allows players to use their inventory items to increase cat and player's XP/level.
 - [ ] Gaining XP and increasing level will also reward some coins
 - [ ] Drop some coins for users everyday by signing-in daily
 - [ ] Design special consumable items to provide temporary buffs and unlock unique abilities for cats

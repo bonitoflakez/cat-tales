@@ -3,10 +3,10 @@ import pool from "../models/db";
 
 export const getPlayerProfile = async (req: Request, res: Response) => {
   try {
-    const { playerId } = req.params;
+    const { username } = req.params;
     const playerQuery =
       "SELECT p.*, c.coins FROM players p LEFT JOIN currency c ON p.user_id = c.user_id WHERE p.username = $1";
-    const playerValues = [playerId];
+    const playerValues = [username];
     const playerResult = await pool.query(playerQuery, playerValues);
 
     if (playerResult.rowCount === 0) {

@@ -3,9 +3,9 @@ import pool from "../models/db";
 
 export const getCatDetails = async (req: Request, res: Response) => {
   try {
-    const { user_id } = req.params;
+    const { userId } = req.params;
     const catQuery = "SELECT * FROM cats WHERE user_id = $1";
-    const catOwnerValue = [user_id];
+    const catOwnerValue = [userId];
     const catDetailsResult = await pool.query(catQuery, catOwnerValue);
 
     if (catDetailsResult.rowCount === 0) {
