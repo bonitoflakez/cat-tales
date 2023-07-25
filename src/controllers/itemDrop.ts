@@ -51,6 +51,24 @@ function generateItemRarity() {
   };
 }
 
+const calculateRarityXP = (base: number, rarity: number): number => {
+  if (rarity === 1) {
+    return base + 0;
+  } else if (rarity === 2) {
+    return base + 10;
+  } else if (rarity === 3) {
+    return base + 20;
+  } else if (rarity === 4) {
+    return base + 30;
+  } else if (rarity === 5) {
+    return base + 40;
+  } else if (rarity === 5) {
+    return base + 50;
+  } else {
+    return base;
+  }
+};
+
 export const dropRandomItem = async (req: Request, res: Response) => {
   try {
     const item = {
@@ -73,10 +91,31 @@ export const addDropItemToInventory = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid owner" });
     }
 
+    let rewardXP = calculateRarityXP(10, rarity);
+
     const insertQuery =
       "INSERT INTO items (name, type, rarity, user_id) VALUES ($1, $2, $3, $4)";
     const values = [name, type, rarity, user_id];
     await pool.query(insertQuery, values);
+
+    const getCurrentPlayerXPQuery = "SELECT xp FROM players WHERE user_id = $1";
+    const getCurrentPlayerXPValues = [user_id];
+    const currentPlayerXPResult = await pool.query(
+      getCurrentPlayerXPQuery,
+      getCurrentPlayerXPValues
+    );
+
+    if (currentPlayerXPResult.rows.length === 0) {
+      return res.status(404).json({ message: "Invalid player" });
+    }
+
+    const currentPlayerXP = currentPlayerXPResult.rows[0].xp;
+
+    const newPlayerXP = currentPlayerXP + rewardXP;
+
+    const updatePlayerXPQuery = "UPDATE players SET xp = $1 WHERE user_id = $2";
+    const updatePlayerXPValues = [newPlayerXP, user_id];
+    await pool.query(updatePlayerXPQuery, updatePlayerXPValues);
 
     return res.status(201).json({ message: "Item stored in inventory" });
   } catch (err) {
