@@ -27,6 +27,8 @@ interface StoreItem {
   price: number;
 }
 
+const itemCache = new Map<string, { rarity: Rarity; price: number }>();
+
 const getRandomRarity = (): { id: number; itemRarity: Rarity } => {
   const totalWeight = rarities.reduce((sum, rarity) => sum + rarity.weight, 0);
   let randomNum = Math.random() * totalWeight;
@@ -39,6 +41,39 @@ const getRandomRarity = (): { id: number; itemRarity: Rarity } => {
   }
 
   return { id: 1, itemRarity: "Common" };
+};
+
+const calculatePrice = (basePrice: number, rarity: Rarity): number => {
+  if (rarity === "Common") {
+    return basePrice + 0;
+  } else if (rarity === "Uncommon") {
+    return basePrice + 10;
+  } else if (rarity === "Rare") {
+    return basePrice + 20;
+  } else if (rarity === "Epic") {
+    return basePrice + 30;
+  } else if (rarity === "Legendary") {
+    return basePrice + 40;
+  } else if (rarity === "Godlike") {
+    return basePrice + 50;
+  } else {
+    return basePrice;
+  }
+};
+
+const cacheItemData = (itemName: string, rarity: Rarity, price: number) => {
+  itemCache.set(itemName, { rarity, price });
+
+  // Clear the cache entry after 24 hours
+  setTimeout(() => {
+    itemCache.delete(itemName);
+  }, 24 * 60 * 60 * 1000);
+};
+
+const getCachedItemData = (
+  itemName: string
+): { rarity: Rarity; price: number } | undefined => {
+  return itemCache.get(itemName);
 };
 
 type ItemType =
@@ -54,34 +89,32 @@ export const getStoreItems = async (req: Request, res: Response) => {
   try {
     const getItemDetails = (items: ItemType[]) =>
       items.map((item) => {
-        const rarityData = getRandomRarity();
-        return {
-          name: item.name,
-          type: item.type,
-          type_id: item.type_id,
-          rarity: rarityData.itemRarity,
-          rarity_id: rarityData.id,
-          price: calculatePrice(item.price, rarityData.itemRarity),
-        };
+        const cachedItemData = getCachedItemData(item.name);
+        if (cachedItemData) {
+          return {
+            name: item.name,
+            type: item.type,
+            type_id: item.type_id,
+            rarity: cachedItemData.rarity,
+            rarity_id:
+              rarities.find((r) => r.itemRarity === cachedItemData.rarity)
+                ?.id || 1,
+            price: cachedItemData.price,
+          };
+        } else {
+          const rarityData = getRandomRarity();
+          const price = calculatePrice(item.price, rarityData.itemRarity);
+          cacheItemData(item.name, rarityData.itemRarity, price);
+          return {
+            name: item.name,
+            type: item.type,
+            type_id: item.type_id,
+            rarity: rarityData.itemRarity,
+            rarity_id: rarityData.id,
+            price: price,
+          };
+        }
       });
-
-    const calculatePrice = (basePrice: number, rarity: Rarity): number => {
-      if (rarity === "Common") {
-        return basePrice + 0;
-      } else if (rarity === "Uncommon") {
-        return basePrice + 10;
-      } else if (rarity === "Rare") {
-        return basePrice + 20;
-      } else if (rarity === "Epic") {
-        return basePrice + 30;
-      } else if (rarity === "Legendary") {
-        return basePrice + 40;
-      } else if (rarity === "Godlike") {
-        return basePrice + 50;
-      } else {
-        return basePrice;
-      }
-    };
 
     const storeItems: ItemType[] = [
       ...Food,

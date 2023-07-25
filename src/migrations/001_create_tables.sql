@@ -7,7 +7,8 @@ CREATE TABLE userinfo (
 
 CREATE TABLE players (
   username VARCHAR(100) NOT NULL,
-  user_id VARCHAR(100) NOT NULL UNIQUE
+  user_id VARCHAR(100) NOT NULL UNIQUE,
+  xp INTEGER DEFAULT 0 NOT NULL
 );
 
 CREATE TABLE cat_types (
@@ -21,7 +22,8 @@ CREATE TABLE cats (
   rarity INTEGER REFERENCES cat_types(id),
   level INTEGER NOT NULL,
   charm VARCHAR(100),
-  user_id VARCHAR(100) REFERENCES players(user_id)
+  user_id VARCHAR(100) REFERENCES players(user_id),
+  xp INTEGER DEFAULT 0 NOT NULL
 );
 
 CREATE TABLE item_types (
