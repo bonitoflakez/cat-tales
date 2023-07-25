@@ -2,6 +2,29 @@ import { Request, Response } from "express";
 import pool from "../models/db";
 import { rarities } from "../constants/itemRarity";
 
+const calculateRarityXP = (base: number, rarity: number): number => {
+  if (rarity === 1) {
+    return base + 0;
+  } else if (rarity === 2) {
+    return base + 10;
+  } else if (rarity === 3) {
+    return base + 20;
+  } else if (rarity === 4) {
+    return base + 30;
+  } else if (rarity === 5) {
+    return base + 40;
+  } else if (rarity === 5) {
+    return base + 50;
+  } else {
+    return base;
+  }
+};
+
+const calculateLevelXP = (level: number): number => {
+  let convertedXP = 10 * level;
+  return convertedXP;
+};
+
 function generateCatType() {
   const totalWeight = rarities.reduce((sum, rarity) => sum + rarity.weight, 0);
 
@@ -34,29 +57,6 @@ export const dropRandomCat = async (req: Request, res: Response) => {
     console.error("Error generating a random cat:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
-};
-
-const calculateRarityXP = (base: number, rarity: number): number => {
-  if (rarity === 1) {
-    return base + 0;
-  } else if (rarity === 2) {
-    return base + 10;
-  } else if (rarity === 3) {
-    return base + 20;
-  } else if (rarity === 4) {
-    return base + 30;
-  } else if (rarity === 5) {
-    return base + 40;
-  } else if (rarity === 5) {
-    return base + 50;
-  } else {
-    return base;
-  }
-};
-
-const calculateLevelXP = (level: number): number => {
-  let convertedXP = 10 * level;
-  return convertedXP;
 };
 
 export const adoptCat = async (req: Request, res: Response) => {
