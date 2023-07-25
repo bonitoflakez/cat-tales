@@ -70,17 +70,31 @@ export const adoptCat = async (req: Request, res: Response) => {
     }
 
     let catXP = calculateLevelXP(level);
-    let playerXP = catXP + calculateRarityXP(10, type);
+    let rewardXP = catXP + calculateRarityXP(10, type);
 
     const insertQuery =
       "INSERT INTO cats (name, rarity, level, user_id, xp) VALUES ($1, $2, $3, $4, $5)";
     const values = [name, type, level, user_id, catXP];
     await pool.query(insertQuery, values);
 
-    const updatePlayerXPQuery = "UPDATE players SET xp = $1 WHERE user_id = $2";
-    const updatePlayerXPValues = [playerXP, user_id];
-    await pool.query(updatePlayerXPQuery, updatePlayerXPValues);
+    const getCurrentPlayerXPQuery = "SELECT xp FROM players WHERE user_id = $1";
+    const getCurrentPlayerXPValues = [user_id];
+    const currentPlayerXPResult = await pool.query(
+      getCurrentPlayerXPQuery,
+      getCurrentPlayerXPValues
+    );
 
+    if (currentPlayerXPResult.rows.length === 0) {
+      return res.status(404).json({ message: "Invalid player" });
+    }
+
+    const currentPlayerXP = currentPlayerXPResult.rows[0].xp;
+
+    const newPlayerXP = currentPlayerXP + rewardXP;
+
+    const updatePlayerXPQuery = "UPDATE players SET xp = $1 WHERE user_id = $2";
+    const updatePlayerXPValues = [newPlayerXP, user_id];
+    await pool.query(updatePlayerXPQuery, updatePlayerXPValues);
     return res.status(201).json({ message: "Cat adopted successfully" });
   } catch (err) {
     console.error("Error adopting a cat:", err);
