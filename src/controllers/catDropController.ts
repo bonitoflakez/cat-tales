@@ -36,6 +36,29 @@ export const dropRandomCat = async (req: Request, res: Response) => {
   }
 };
 
+const calculateRarityXP = (base: number, rarity: number): number => {
+  if (rarity === 1) {
+    return base + 0;
+  } else if (rarity === 2) {
+    return base + 10;
+  } else if (rarity === 3) {
+    return base + 20;
+  } else if (rarity === 4) {
+    return base + 30;
+  } else if (rarity === 5) {
+    return base + 40;
+  } else if (rarity === 5) {
+    return base + 50;
+  } else {
+    return base;
+  }
+};
+
+const calculateLevelXP = (level: number): number => {
+  let convertedXP = 10 * level;
+  return convertedXP;
+};
+
 export const adoptCat = async (req: Request, res: Response) => {
   try {
     const { name, type, level, user_id } = req.body;
@@ -46,10 +69,17 @@ export const adoptCat = async (req: Request, res: Response) => {
         .json({ message: "Please provide a valid name for the cat." });
     }
 
+    let catXP = calculateLevelXP(level);
+    let playerXP = catXP + calculateRarityXP(10, type);
+
     const insertQuery =
-      "INSERT INTO cats (name, rarity, level, user_id) VALUES ($1, $2, $3, $4)";
-    const values = [name, type, level, user_id];
+      "INSERT INTO cats (name, rarity, level, user_id, xp) VALUES ($1, $2, $3, $4, $5)";
+    const values = [name, type, level, user_id, catXP];
     await pool.query(insertQuery, values);
+
+    const updatePlayerXPQuery = "UPDATE players SET xp = $1 WHERE user_id = $2";
+    const updatePlayerXPValues = [playerXP, user_id];
+    await pool.query(updatePlayerXPQuery, updatePlayerXPValues);
 
     return res.status(201).json({ message: "Cat adopted successfully" });
   } catch (err) {

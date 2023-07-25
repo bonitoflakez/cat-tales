@@ -8,7 +8,7 @@
 - [x] Every player should have a unique userid
 - [x] An in-game currency
 - [x] Add a store where players can buy cats and items of different rarity using in-game currency
-- [ ] Develop an XP management system for users and each of the cat that the user owns
+- [x] Develop an XP management system for users and each of the cat that the user owns
 - [ ] Develop the mechanism that allows player to use his inventory items to increase cat and player's XP/level over time
 - [ ] Gaining XP and increasing level will also reward some coins
 - [ ] Drop some coins for users everyday by signing-in daily

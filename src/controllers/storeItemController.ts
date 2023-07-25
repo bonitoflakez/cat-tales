@@ -12,7 +12,6 @@ import {
 import pool from "../models/db";
 
 /**
- * todo: keep the rarity and price of items same for 24 hours and re-run the `getRandomRarity` function after that
  * todo: find a better way to increment price of items based on their rarity
  */
 
