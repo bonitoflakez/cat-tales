@@ -131,8 +131,6 @@ export const useItem = async (req: Request, res: Response) => {
     const updatePlayerXPValue = [updatedPlayerXP, userId];
     await pool.query(updatePlayerXPQuery, updatePlayerXPValue);
 
-    console.log(Math.floor(incXP * 2));
-
     const result = {
       item_name: itemData.name,
       itemRarity: rarity,
