@@ -137,17 +137,22 @@ export const getStoreItems = async (req: Request, res: Response) => {
 };
 
 export const buyStoreItem = async (req: Request, res: Response) => {
+  const client = await pool.connect();
+
   try {
     const { name, type, rarity, price, user_id } = req.body;
 
+    await client.query("BEGIN");
+
     const getUserCoinsQuery = "SELECT coins FROM currency WHERE user_id = $1";
     const getUserCoinsValues = [user_id];
-    const userCoinsResult = await pool.query(
+    const userCoinsResult = await client.query(
       getUserCoinsQuery,
       getUserCoinsValues
     );
 
     if (userCoinsResult.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ message: "Invalid user" });
     }
 
@@ -156,6 +161,7 @@ export const buyStoreItem = async (req: Request, res: Response) => {
     const remainingCoins = userCoins - price;
 
     if (remainingCoins < 0) {
+      await client.query("ROLLBACK");
       return res
         .status(400)
         .json({ message: "Insufficient coins to buy this item" });
@@ -164,16 +170,21 @@ export const buyStoreItem = async (req: Request, res: Response) => {
     const updateCoinsQuery =
       "UPDATE currency SET coins = $1 WHERE user_id = $2";
     const updateCoinsValues = [remainingCoins, user_id];
-    await pool.query(updateCoinsQuery, updateCoinsValues);
+    await client.query(updateCoinsQuery, updateCoinsValues);
 
     const insertQuery =
       "INSERT INTO items (name, type, rarity, user_id) VALUES ($1, $2, $3, $4)";
     const insertValues = [name, type, rarity, user_id];
-    await pool.query(insertQuery, insertValues);
+    await client.query(insertQuery, insertValues);
+
+    await client.query("COMMIT");
 
     return res.status(201).json({ message: "Item bought successfully" });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error while grabbing drop item:", err);
     return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    client.release();
   }
 };

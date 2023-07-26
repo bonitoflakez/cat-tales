@@ -61,6 +61,7 @@ export const dropRandomCat = async (req: Request, res: Response) => {
 };
 
 export const adoptCat = async (req: Request, res: Response) => {
+  const client = await pool.connect();
   try {
     const { name, type, level, user_id } = req.body;
 
@@ -74,19 +75,22 @@ export const adoptCat = async (req: Request, res: Response) => {
     let rewardXP = catXP + calculateRarityXP(100, type);
     let updatedLevel = Math.floor(rewardXP / 100);
 
+    await client.query("BEGIN");
+
     const insertQuery =
       "INSERT INTO cats (name, rarity, level, user_id, xp) VALUES ($1, $2, $3, $4, $5)";
     const values = [name, type, updatedLevel, user_id, rewardXP];
-    await pool.query(insertQuery, values);
+    await client.query(insertQuery, values);
 
     const getCurrentPlayerXPQuery = "SELECT xp FROM players WHERE user_id = $1";
     const getCurrentPlayerXPValues = [user_id];
-    const currentPlayerXPResult = await pool.query(
+    const currentPlayerXPResult = await client.query(
       getCurrentPlayerXPQuery,
       getCurrentPlayerXPValues
     );
 
     if (currentPlayerXPResult.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ message: "Invalid player" });
     }
 
@@ -96,11 +100,16 @@ export const adoptCat = async (req: Request, res: Response) => {
 
     const updatePlayerXPQuery = "UPDATE players SET xp = $1 WHERE user_id = $2";
     const updatePlayerXPValues = [newPlayerXP, user_id];
-    await pool.query(updatePlayerXPQuery, updatePlayerXPValues);
+    await client.query(updatePlayerXPQuery, updatePlayerXPValues);
+
+    await client.query("COMMIT");
 
     return res.status(201).json({ message: "Cat adopted successfully" });
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error adopting a cat:", err);
     return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    client.release();
   }
 };
