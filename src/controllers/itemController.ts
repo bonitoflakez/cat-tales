@@ -10,8 +10,6 @@ import {
 } from "../constants/itemNameAndType";
 import pool from "../models/db";
 
-// TODO: Do something about multiple items with same name, type and rarity
-
 function getTypeArray(type: number) {
   switch (type) {
     case 1:
@@ -72,17 +70,22 @@ export const getItemDetails = async (req: Request, res: Response) => {
 };
 
 export const useItem = async (req: Request, res: Response) => {
+  const client = await pool.connect();
   try {
     const { itemName, type, rarity, userId, catName } = req.body;
     const itemTypeNumber = parseInt(type);
+
+    await client.query("BEGIN");
+
     const itemGetXPQuery =
       "SELECT * FROM items WHERE name=$1 AND type=$2 AND rarity=$3 AND user_id=$4";
     const itemGetXPValue = [itemName, itemTypeNumber, rarity, userId];
-    const itemGetXPResult = await pool.query(itemGetXPQuery, itemGetXPValue);
+    const itemGetXPResult = await client.query(itemGetXPQuery, itemGetXPValue);
 
-    const items = itemGetXPResult.rows;
+    const items = itemGetXPResult.rows[0];
 
     if (!items) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ message: "No items found for this user" });
     }
 
@@ -92,6 +95,7 @@ export const useItem = async (req: Request, res: Response) => {
     );
 
     if (!itemData) {
+      await client.query("ROLLBACK");
       return res
         .status(404)
         .json({ message: "Item not found in the database" });
@@ -101,11 +105,15 @@ export const useItem = async (req: Request, res: Response) => {
 
     const getCatDataQuery = "SELECT * FROM cats WHERE name=$1";
     const getCatDataValue = [catName];
-    const getCatDataResult = await pool.query(getCatDataQuery, getCatDataValue);
+    const getCatDataResult = await client.query(
+      getCatDataQuery,
+      getCatDataValue
+    );
 
     const cat = getCatDataResult.rows[0];
 
     if (!cat) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ message: "Unable to find cat name" });
     }
 
@@ -115,11 +123,11 @@ export const useItem = async (req: Request, res: Response) => {
 
     const updateCatQuery = "UPDATE cats SET xp=$1, level=$2 WHERE name=$3";
     const updateCatValues = [updatedCatXP, updatedCatLevel, catName];
-    await pool.query(updateCatQuery, updateCatValues);
+    await client.query(updateCatQuery, updateCatValues);
 
     const getPlayerXPQuery = "SELECT * FROM players WHERE user_id=$1";
     const getPlayerXPValue = [userId];
-    const getPlayerXPResult = await pool.query(
+    const getPlayerXPResult = await client.query(
       getPlayerXPQuery,
       getPlayerXPValue
     );
@@ -129,7 +137,21 @@ export const useItem = async (req: Request, res: Response) => {
 
     const updatePlayerXPQuery = "UPDATE players SET xp=$1 WHERE user_id=$2";
     const updatePlayerXPValue = [updatedPlayerXP, userId];
-    await pool.query(updatePlayerXPQuery, updatePlayerXPValue);
+    await client.query(updatePlayerXPQuery, updatePlayerXPValue);
+
+    // using `LIMIT 1` to delete only one item if there are multiple items with same name, type, and rarity
+    const deleteUsedItemQuery = `
+      DELETE FROM items
+      WHERE id IN (
+        SELECT id
+        FROM items
+        WHERE name=$1 AND type=$2 AND rarity=$3
+        LIMIT 1
+      )`;
+    const deleteUsedItemValue = [itemName, type, rarity];
+    await client.query(deleteUsedItemQuery, deleteUsedItemValue);
+
+    await client.query("COMMIT");
 
     const result = {
       item_name: itemData.name,
@@ -141,7 +163,10 @@ export const useItem = async (req: Request, res: Response) => {
 
     return res.status(200).json(result);
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error using item:", err);
     return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    client.release();
   }
 };
