@@ -18,7 +18,7 @@ CREATE TABLE cat_types (
 
 CREATE TABLE cats (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
+  name VARCHAR(100) NOT NULL UNIQUE,
   rarity INTEGER REFERENCES cat_types(id),
   level INTEGER NOT NULL,
   charm VARCHAR(100),

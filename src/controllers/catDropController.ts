@@ -3,25 +3,26 @@ import pool from "../models/db";
 import { rarities } from "../constants/itemRarity";
 
 const calculateRarityXP = (base: number, rarity: number): number => {
-  if (rarity === 1) {
-    return base + 0;
-  } else if (rarity === 2) {
-    return base + 10;
-  } else if (rarity === 3) {
-    return base + 20;
-  } else if (rarity === 4) {
-    return base + 30;
-  } else if (rarity === 5) {
-    return base + 40;
-  } else if (rarity === 5) {
-    return base + 50;
-  } else {
-    return base;
+  switch (rarity) {
+    case 1:
+      return base + 0;
+    case 2:
+      return base + 10;
+    case 3:
+      return base + 20;
+    case 4:
+      return base + 30;
+    case 5:
+      return base + 40;
+    case 6:
+      return base + 50;
+    default:
+      return base;
   }
 };
 
 const calculateLevelXP = (level: number): number => {
-  let convertedXP = 10 * level;
+  let convertedXP = 100 * level;
   return convertedXP;
 };
 
@@ -70,11 +71,12 @@ export const adoptCat = async (req: Request, res: Response) => {
     }
 
     let catXP = calculateLevelXP(level);
-    let rewardXP = catXP + calculateRarityXP(10, type);
+    let rewardXP = catXP + calculateRarityXP(100, type);
+    let updatedLevel = Math.floor(rewardXP / 100);
 
     const insertQuery =
       "INSERT INTO cats (name, rarity, level, user_id, xp) VALUES ($1, $2, $3, $4, $5)";
-    const values = [name, type, level, user_id, catXP];
+    const values = [name, type, updatedLevel, user_id, rewardXP];
     await pool.query(insertQuery, values);
 
     const getCurrentPlayerXPQuery = "SELECT xp FROM players WHERE user_id = $1";
@@ -95,6 +97,7 @@ export const adoptCat = async (req: Request, res: Response) => {
     const updatePlayerXPQuery = "UPDATE players SET xp = $1 WHERE user_id = $2";
     const updatePlayerXPValues = [newPlayerXP, user_id];
     await pool.query(updatePlayerXPQuery, updatePlayerXPValues);
+
     return res.status(201).json({ message: "Cat adopted successfully" });
   } catch (err) {
     console.error("Error adopting a cat:", err);
