@@ -3,10 +3,6 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import routes from "./routes/routes";
 
-import dotenv from "dotenv";
-import router from "./routes/catDropRoute";
-dotenv.config();
-
 const app = express();
 const port = 8000;
 

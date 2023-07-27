@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
+import { ItemType } from "../types/itemStore.types";
 import { rarities } from "../constants/itemRarity";
+import pool from "../models/db";
+
 import {
   Food,
   Toys,
@@ -9,80 +12,17 @@ import {
   Costume,
   GroomingSupplies,
 } from "../constants/itemNameAndType";
-import pool from "../models/db";
+
+import {
+  getRandomRarity,
+  calculatePrice,
+  cacheItemData,
+  getCachedItemData,
+} from "../helpers/storeItem.helper";
 
 /**
  * todo: find a better way to increment price of items based on their rarity
  */
-
-type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary" | "Godlike";
-
-interface StoreItem {
-  name: string;
-  type: string;
-  type_id: number;
-  rarity: Rarity;
-  rarity_id: number;
-  price: number;
-}
-
-const itemCache = new Map<string, { rarity: Rarity; price: number }>();
-
-const getRandomRarity = (): { id: number; itemRarity: Rarity } => {
-  const totalWeight = rarities.reduce((sum, rarity) => sum + rarity.weight, 0);
-  let randomNum = Math.random() * totalWeight;
-
-  for (const rarity of rarities) {
-    if (randomNum < rarity.weight) {
-      return { id: rarity.id, itemRarity: rarity.itemRarity as Rarity };
-    }
-    randomNum -= rarity.weight;
-  }
-
-  return { id: 1, itemRarity: "Common" };
-};
-
-const calculatePrice = (basePrice: number, rarity: Rarity): number => {
-  if (rarity === "Common") {
-    return basePrice + 0;
-  } else if (rarity === "Uncommon") {
-    return basePrice + 10;
-  } else if (rarity === "Rare") {
-    return basePrice + 20;
-  } else if (rarity === "Epic") {
-    return basePrice + 30;
-  } else if (rarity === "Legendary") {
-    return basePrice + 40;
-  } else if (rarity === "Godlike") {
-    return basePrice + 50;
-  } else {
-    return basePrice;
-  }
-};
-
-const cacheItemData = (itemName: string, rarity: Rarity, price: number) => {
-  itemCache.set(itemName, { rarity, price });
-
-  // Clear the cache entry after 24 hours
-  setTimeout(() => {
-    itemCache.delete(itemName);
-  }, 24 * 60 * 60 * 1000);
-};
-
-const getCachedItemData = (
-  itemName: string
-): { rarity: Rarity; price: number } | undefined => {
-  return itemCache.get(itemName);
-};
-
-type ItemType =
-  | (typeof Food)[number]
-  | (typeof Toys)[number]
-  | (typeof Charms)[number]
-  | (typeof Treats)[number]
-  | (typeof Potion)[number]
-  | (typeof Costume)[number]
-  | (typeof GroomingSupplies)[number];
 
 export const getStoreItems = async (req: Request, res: Response) => {
   try {

@@ -13,7 +13,6 @@
 - [x] Develop the mechanism that allows players to use their inventory items to increase cat and player's XP/level.
 - [ ] Gaining XP and increasing level will also reward some coins
 - [ ] Drop some coins for users everyday by signing-in daily
-- [ ] Design special consumable items to provide temporary buffs and unlock unique abilities for cats
 - [ ] Create different achievements that user can complete to gain more in-game currency
 - [ ] Add quests and achievements and give user some kind of rewards through them
 - [ ] Add a social interaction feature that allows users to connect with each other

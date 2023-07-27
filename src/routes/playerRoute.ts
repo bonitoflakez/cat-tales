@@ -1,8 +1,8 @@
 import express from "express";
-import { getCatDetails } from "../controllers/catController";
-import { getPlayerProfile } from "../controllers/playerController";
-import { getItemDetails } from "../controllers/itemController";
-import { useItem } from "../controllers/itemController";
+import { getCatDetails } from "../controllers/cat.controller";
+import { getPlayerProfile } from "../controllers/player.controller";
+import { getItemDetails } from "../controllers/item.controller";
+import { useItem } from "../controllers/item.controller";
 
 const router = express.Router();
 

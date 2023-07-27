@@ -2,7 +2,7 @@ import express from "express";
 import {
   dropRandomItem,
   addDropItemToInventory,
-} from "../controllers/itemDrop";
+} from "../controllers/itemDrop.controller";
 
 const router = express.Router();
 

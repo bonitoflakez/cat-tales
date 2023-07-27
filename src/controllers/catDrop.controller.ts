@@ -1,50 +1,12 @@
 import { Request, Response } from "express";
 import pool from "../models/db";
-import { rarities } from "../constants/itemRarity";
 
-const calculateRarityXP = (base: number, rarity: number): number => {
-  switch (rarity) {
-    case 1:
-      return base + 0;
-    case 2:
-      return base + 10;
-    case 3:
-      return base + 20;
-    case 4:
-      return base + 30;
-    case 5:
-      return base + 40;
-    case 6:
-      return base + 50;
-    default:
-      return base;
-  }
-};
-
-const calculateLevelXP = (level: number): number => {
-  let convertedXP = 100 * level;
-  return convertedXP;
-};
-
-function generateCatType() {
-  const totalWeight = rarities.reduce((sum, rarity) => sum + rarity.weight, 0);
-
-  const randomNumber = Math.floor(Math.random() * totalWeight) + 1;
-
-  let cumulativeWeight = 0;
-  for (const rarity of rarities) {
-    cumulativeWeight += rarity.weight;
-    if (randomNumber <= cumulativeWeight) {
-      return { typeId: rarity.id, type: rarity.itemRarity };
-    }
-  }
-
-  return { typeId: rarities[0].id, type: rarities[0].itemRarity };
-}
-
-function generateCatLevel() {
-  return Math.floor(Math.random() * 10) + 1;
-}
+import {
+  generateCatType,
+  generateCatLevel,
+  calculateLevelXP,
+  calculateRarityXP,
+} from "../helpers/catDrop.helper";
 
 export const dropRandomCat = async (req: Request, res: Response) => {
   try {
