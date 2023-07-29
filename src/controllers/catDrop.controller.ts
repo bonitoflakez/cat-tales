@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { calculateCoinReward } from "../helpers/rewardCoins.helper";
 import pool from "../models/db";
 
 import {
@@ -58,11 +59,19 @@ export const adoptCat = async (req: Request, res: Response) => {
 
     const currentPlayerXP = currentPlayerXPResult.rows[0].xp;
 
+    const newPlayerLevel = Math.floor(rewardXP / 100);
+    const coinReward = calculateCoinReward(newPlayerLevel);
+
     const newPlayerXP = currentPlayerXP + rewardXP;
 
     const updatePlayerXPQuery = "UPDATE players SET xp = $1 WHERE user_id = $2";
     const updatePlayerXPValues = [newPlayerXP, user_id];
     await client.query(updatePlayerXPQuery, updatePlayerXPValues);
+
+    const updatePlayerCoinQuery =
+      "UPDATE currency SET coins = $1 WHERE user_id = $2";
+    const updatePlayerCoinValues = [coinReward, user_id];
+    await client.query(updatePlayerCoinQuery, updatePlayerCoinValues);
 
     await client.query("COMMIT");
 

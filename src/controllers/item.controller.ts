@@ -5,6 +5,10 @@ import {
   getTypeArray,
   handleItemXPBoost,
 } from "../helpers/itemController.helper";
+import {
+  calculateCoinReward,
+  checkLevelUp,
+} from "../helpers/rewardCoins.helper";
 
 export const getItemDetails = async (req: Request, res: Response) => {
   try {
@@ -89,11 +93,34 @@ export const useItem = async (req: Request, res: Response) => {
     );
 
     const player = getPlayerXPResult.rows[0];
+    const currentLVL = Math.floor(player.xp / 100);
     const updatedPlayerXP = player.xp + Math.floor(incXP * 2);
+    const newLVL = Math.floor(updatedPlayerXP / 100);
+
+    let levelUpRewardCoins = 0;
+
+    if (player.xp < updatedPlayerXP && checkLevelUp(currentLVL, newLVL)) {
+      levelUpRewardCoins = calculateCoinReward(newLVL);
+    }
 
     const updatePlayerXPQuery = "UPDATE players SET xp=$1 WHERE user_id=$2";
     const updatePlayerXPValue = [updatedPlayerXP, userId];
     await client.query(updatePlayerXPQuery, updatePlayerXPValue);
+
+    const getPlayerCoinQuery = "SELECT * FROM currency WHERE user_id=$1";
+    const getPlayerCoinValue = [userId];
+    const playerCoins = await client.query(
+      getPlayerCoinQuery,
+      getPlayerCoinValue
+    );
+
+    const coins = playerCoins.rows[0];
+    const rewardedCoins = levelUpRewardCoins + coins.coins;
+
+    const updatePlayerCoinQuery =
+      "UPDATE currency SET coins=$1 WHERE user_id=$2";
+    const updatePlayerCoinValue = [rewardedCoins, userId];
+    await client.query(updatePlayerCoinQuery, updatePlayerCoinValue);
 
     // using `LIMIT 1` to delete only one item if there are multiple items with same name, type, and rarity
     const deleteUsedItemQuery = `
@@ -115,6 +142,8 @@ export const useItem = async (req: Request, res: Response) => {
       catXP: updatedCatXP,
       catlvl: updatedCatLevel,
       playerXP: updatedPlayerXP,
+      levelup: checkLevelUp(currentLVL, newLVL),
+      rewardCoins: levelUpRewardCoins,
     };
 
     return res.status(200).json(result);
