@@ -11,7 +11,7 @@
 - [x] Develop an XP management system for users and each of the cat that the user owns
 - [x] Players will gain XP on opening item drop or adopting a cat from cat drop
 - [x] Develop the mechanism that allows players to use their inventory items to increase cat and player's XP/level.
-- [ ] Gaining XP and increasing level will also reward some coins
+- [x] Gaining XP and increasing level will also reward some coins
 - [ ] Drop some coins for users everyday by signing-in daily
 - [ ] Create different achievements that user can complete to gain more in-game currency
 - [ ] Add quests and achievements and give user some kind of rewards through them
