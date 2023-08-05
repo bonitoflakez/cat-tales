@@ -28,10 +28,10 @@ export const adoptCat = async (req: Request, res: Response) => {
   try {
     const { name, type, level, user_id } = req.body;
 
-    if (!name) {
+    if (!name || !type || !level || !user_id) {
       return res
         .status(400)
-        .json({ message: "Please provide a valid name for the cat." });
+        .json({ message: "Something is missing in details" });
     }
 
     let catXP = calculateLevelXP(level);
@@ -68,9 +68,19 @@ export const adoptCat = async (req: Request, res: Response) => {
     const updatePlayerXPValues = [newPlayerXP, user_id];
     await client.query(updatePlayerXPQuery, updatePlayerXPValues);
 
+    const getPlayerCoinQuery = "SELECT * FROM currency WHERE user_id=$1";
+    const getPlayerCoinValue = [user_id];
+    const playerCoins = await client.query(
+      getPlayerCoinQuery,
+      getPlayerCoinValue
+    );
+
+    const coins = playerCoins.rows[0];
+    const rewardedCoins = coinReward + coins.coins;
+
     const updatePlayerCoinQuery =
       "UPDATE currency SET coins = $1 WHERE user_id = $2";
-    const updatePlayerCoinValues = [coinReward, user_id];
+    const updatePlayerCoinValues = [rewardedCoins, user_id];
     await client.query(updatePlayerCoinQuery, updatePlayerCoinValues);
 
     await client.query("COMMIT");

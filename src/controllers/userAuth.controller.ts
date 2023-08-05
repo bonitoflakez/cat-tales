@@ -9,6 +9,13 @@ const secretKey: Secret = "supersecuresecret";
 export const signUp = async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        message: "Please fill all the fields",
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user_id = uuidv4();
@@ -71,6 +78,12 @@ export const signUp = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        message: "Please fill all the fields",
+      });
+    }
 
     const getUserQuery = "SELECT * FROM userInfo WHERE username = $1";
     const getUserValues = [username];
