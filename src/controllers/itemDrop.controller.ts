@@ -31,8 +31,15 @@ export const addDropItemToInventory = async (req: Request, res: Response) => {
   try {
     const { name, type, rarity, user_id } = req.body;
 
-    if (!user_id) {
-      return res.status(400).json({ message: "Invalid player" });
+    const userQuery = "SELECT user_id FROM players WHERE user_id = $1";
+    const userValue = [user_id];
+    const userResult = await client.query(userQuery, userValue);
+
+    if (userResult.rowCount === 0 || !user_id) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: "Invalid user",
+      });
     }
 
     let rewardXP = calculateRarityXP(10, rarity);

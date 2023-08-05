@@ -40,6 +40,17 @@ export const adoptCat = async (req: Request, res: Response) => {
 
     await client.query("BEGIN");
 
+    const userQuery = "SELECT user_id FROM players WHERE user_id = $1";
+    const userValue = [user_id];
+    const userResult = await client.query(userQuery, userValue);
+
+    if (userResult.rowCount === 0 || !user_id) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: "Invalid user",
+      });
+    }
+
     const insertQuery =
       "INSERT INTO cats (name, rarity, level, user_id, xp) VALUES ($1, $2, $3, $4, $5)";
     const values = [name, type, updatedLevel, user_id, rewardXP];
@@ -54,7 +65,9 @@ export const adoptCat = async (req: Request, res: Response) => {
 
     if (currentPlayerXPResult.rows.length === 0) {
       await client.query("ROLLBACK");
-      return res.status(404).json({ message: "Invalid player" });
+      return res.status(404).json({
+        message: "Unable to fetch player's XP",
+      });
     }
 
     const currentPlayerXP = currentPlayerXPResult.rows[0].xp;
@@ -85,7 +98,9 @@ export const adoptCat = async (req: Request, res: Response) => {
 
     await client.query("COMMIT");
 
-    return res.status(201).json({ message: "Cat adopted successfully" });
+    return res.status(201).json({
+      message: "Cat adopted successfully",
+    });
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("Error adopting a cat:", err);
