@@ -8,7 +8,8 @@ CREATE TABLE userinfo (
 CREATE TABLE players (
   username VARCHAR(100) NOT NULL,
   user_id VARCHAR(100) NOT NULL UNIQUE,
-  xp INTEGER DEFAULT 0 NOT NULL
+  xp INTEGER DEFAULT 0 NOT NULL,
+  last_claim_time TIMESTAMP
 );
 
 CREATE TABLE cat_types (

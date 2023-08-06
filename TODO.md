@@ -13,7 +13,7 @@
 - [x] Develop the mechanism that allows players to use their inventory items to increase cat and player's XP/level.
 - [x] Gaining XP and increasing level will also reward some coins
 - [x] Drop some coins for users everyday when they sign-in
-  - [ ] manage the 24 hour time limit for every user id
+  - [x] manage the 24 hour time limit for every user id
 - [ ] Create different achievements that user can complete to gain more in-game currency
 - [ ] Add quests and achievements and give user some kind of rewards through them
 - [ ] Add a social interaction feature that allows users to connect with each other
