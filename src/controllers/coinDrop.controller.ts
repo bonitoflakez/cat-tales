@@ -38,7 +38,6 @@ export const dropDailyCoins = async (req: Request, res: Response) => {
 
     const userRecord = userResult.rows[0];
     const lastClaimTime = userRecord.last_claim_time;
-    console.log(lastClaimTime, checkLastClaimTime(lastClaimTime));
 
     if (lastClaimTime && !checkLastClaimTime(lastClaimTime)) {
       await client.query("ROLLBACK");
