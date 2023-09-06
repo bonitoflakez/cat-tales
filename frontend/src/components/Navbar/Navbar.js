@@ -32,6 +32,13 @@ export default function Navbar() {
         >
           Settings
         </NavLink>
+        <NavLink
+          to="/auth"
+          className="px-4 py-2 text-white hover:bg-neutral-900 rounded-md focus:outline-none"
+          activeClassName="bg-neutral-900"
+        >
+          Login/Signup
+        </NavLink>
       </div>
     </nav>
   );

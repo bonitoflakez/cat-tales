@@ -41,8 +41,9 @@ export const dropDailyCoins = async (req: Request, res: Response) => {
 
     if (lastClaimTime && !checkLastClaimTime(lastClaimTime)) {
       await client.query("ROLLBACK");
-      return res.status(400).json({
+      return res.status(200).json({
         message: "Coins already claimed",
+        status: "already_claimed",
       });
     }
 
