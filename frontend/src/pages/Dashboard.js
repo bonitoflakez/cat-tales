@@ -80,9 +80,9 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="dashboard-container border m-4">
-        <div className="dashboard-container-top bg-neutral-900 text-white p-2 grid grid-cols-2 gap-2">
-          <div className="dashboard-user-info border rounded-md p-4">
+      <div className="dashboard-container m-4">
+        <div className="dashboard-container-top text-white p-2 grid grid-cols-2 gap-2">
+          <div className="dashboard-user-info bg-neutral-900 border rounded-md p-4">
             <p className="user-name">username: {userData?.username}</p>
             <p className="user-id">
               user id: {/* Add copy icon on front of uuid */}
@@ -96,13 +96,15 @@ export default function Dashboard() {
             </p>
             <p className="user-coins">coins: {userData?.coins}</p>
           </div>
-          <div className="dashboard-inventory-info border rounded-md p-4">
-            <p className="user-cats">total cats: {userCatsData.length}</p>
-            <p className="user-items">total items: {userItemsData.length}</p>
+          <div className="dashboard-inventory-info bg-neutral-900 border rounded-md p-4">
+            <p className="user-cats">total cats: {userCatsData.length || 0}</p>
+            <p className="user-items">
+              total items: {userItemsData.length || 0}
+            </p>
           </div>
         </div>
-        <div className="dashboard-container-bottom bg-neutral-900 text-white p-2">
-          <div className="dashboard-additional-details border rounded-md p-4">
+        <div className="dashboard-container-bottom text-white p-2">
+          <div className="dashboard-additional-details bg-neutral-900 border rounded-md p-4">
             <p className="next-drop-in">
               next drop will be available at: {nextClaimTime}
             </p>

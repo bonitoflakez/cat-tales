@@ -9,7 +9,10 @@ export const getCatDetails = async (req: Request, res: Response) => {
     const catDetailsResult = await pool.query(catQuery, catOwnerValue);
 
     if (catDetailsResult.rowCount === 0) {
-      return res.status(404).json({ message: "This player has no cats!!??" });
+      return res.status(200).json({ 
+        message: "This player has no cats!!??",
+        has_cats: false
+      });
     }
 
     const cats = catDetailsResult.rows;

@@ -18,7 +18,10 @@ export const getItemDetails = async (req: Request, res: Response) => {
     const itemDetailsResult = await pool.query(itemQuery, itemOwnerValue);
 
     if (itemDetailsResult.rowCount === 0) {
-      return res.status(404).json({ message: "This owner has no items!!??" });
+      return res.status(200).json({ 
+        message: "This owner has no items!!??",
+        has_items: false
+      });
     }
 
     const items = itemDetailsResult.rows;
