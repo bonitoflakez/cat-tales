@@ -6,6 +6,7 @@ import Settings from "./pages/Settings";
 import Store from "./pages/Store";
 import Navbar from "./components/Navbar/Navbar";
 import Auth from "./pages/Auth";
+import Daily from "./pages/Daily";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/store" element={<Store />} />
+          <Route path="/daily" element={<Daily />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/auth" element={<Auth />} />
         </Routes>

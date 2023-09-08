@@ -5,27 +5,27 @@ export default function Store() {
   const [storeData, setStoreData] = useState([]);
   const [playerData, setPlayerData] = useState([]);
   const [message, setMessage] = useState("");
+
   const username = "ooga";
 
+  const fetchData = async () => {
+    try {
+      const storeDataResponse = await axios.get(
+        "http://localhost:8000/api/store/getItems"
+      );
+      setStoreData(storeDataResponse.data.storeDataWithDetails);
+
+      const userResponse = await axios.get(
+        `http://localhost:8000/api/player/getPlayer/${username}`
+      );
+
+      setPlayerData(userResponse.data);
+    } catch (error) {
+      console.error("Error while fetching store data: ", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const storeDataResponse = await axios.get(
-          "http://localhost:8000/api/store/getItems"
-        );
-        setStoreData(storeDataResponse.data.storeDataWithDetails);
-
-        const userResponse = await axios.get(
-          `http://localhost:8000/api/player/getPlayer/${username}`
-        );
-
-        setPlayerData(userResponse.data);
-        // user_id
-      } catch (error) {
-        console.error("Error while fetching store data: ", error);
-      }
-    };
-
     fetchData();
   }, [username]);
 

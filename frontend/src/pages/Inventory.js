@@ -35,7 +35,7 @@ export default function Inventory() {
   };
 
   useEffect(() => {
-    fetchData(); // Fetch initial data when the component mounts
+    fetchData();
   }, [username]);
 
   const handleUseItemClick = (item) => {
@@ -62,7 +62,6 @@ export default function Inventory() {
       setIsModalOpen(false);
       setMessage("Item used successfully!");
 
-      // Refetch the data after using the item
       fetchData();
     } catch (error) {
       console.error("Error while using item", error);
@@ -112,7 +111,6 @@ export default function Inventory() {
             </ul>
           )}
           {selectedItem && (
-            /* Modal */
             <div
               className={`fixed inset-0 flex items-center justify-center ${
                 isModalOpen ? "block" : "hidden"
@@ -146,7 +144,7 @@ export default function Inventory() {
                 </button>
                 <button
                   className="close-modal border p-1 mt-1 ml-2 rounded-md"
-                  onClick={() => setIsModalOpen(false)} // Close the modal when "Close" is clicked
+                  onClick={() => setIsModalOpen(false)}
                 >
                   Close
                 </button>

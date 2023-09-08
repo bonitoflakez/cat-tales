@@ -26,6 +26,13 @@ export default function Navbar() {
           Store
         </NavLink>
         <NavLink
+          to="/daily"
+          className="px-4 py-2 text-white hover:bg-neutral-900 rounded-md focus:outline-none"
+          activeClassName="bg-neutral-900"
+        >
+          Daily Rewards
+        </NavLink>
+        <NavLink
           to="/settings"
           className="px-4 py-2 text-white hover:bg-neutral-900 rounded-md focus:outline-none"
           activeClassName="bg-neutral-900"

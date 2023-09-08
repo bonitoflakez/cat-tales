@@ -26,55 +26,53 @@ export default function Dashboard() {
   // This'll be replaced after session management
   const username = "ooga"; // Set username here
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userResponse = await axios.get(
-          `http://localhost:8000/api/player/getPlayer/${username}`
-        );
-        setUserData(userResponse.data);
+  const fetchData = async () => {
+    try {
+      const userResponse = await axios.get(
+        `http://localhost:8000/api/player/getPlayer/${username}`
+      );
+      setUserData(userResponse.data);
 
-        const playerId = userResponse.data.user_id;
+      const playerId = userResponse.data.user_id;
 
-        const catResponse = await axios.get(
-          `http://localhost:8000/api/player/getPlayerCat/${playerId}`
-        );
-        setUserCatsData(catResponse.data);
+      const catResponse = await axios.get(
+        `http://localhost:8000/api/player/getPlayerCat/${playerId}`
+      );
+      setUserCatsData(catResponse.data);
 
-        const itemResponse = await axios.get(
-          `http://localhost:8000/api/player/getPlayerItem/${playerId}`
-        );
-        setUserItemsData(itemResponse.data);
+      const itemResponse = await axios.get(
+        `http://localhost:8000/api/player/getPlayerItem/${playerId}`
+      );
+      setUserItemsData(itemResponse.data);
 
-        const coinRewardResponse = await axios.post(
-          `http://localhost:8000/api/daily/coins`,
-          {
-            user_id: playerId,
+      const coinRewardResponse = await axios.post(
+        `http://localhost:8000/api/daily/coins`,
+        {
+          user_id: playerId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
           },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        }
+      );
 
-        // Calculate the next claim time based on the last_claim_time
-        const lastClaimTime = userResponse.data.last_claim_time;
-        const lastClaimDate = new Date(lastClaimTime);
-        const resetInterval = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-        const nextClaimTime = new Date(lastClaimDate.getTime() + resetInterval);
+      const lastClaimTime = userResponse.data.last_claim_time;
+      const lastClaimDate = new Date(lastClaimTime);
+      const resetInterval = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      const nextClaimTime = new Date(lastClaimDate.getTime() + resetInterval);
 
-        // Format time in hh:mm:ss format
-        const formattedNextClaimTime = `${nextClaimTime.getHours()}:${nextClaimTime.getMinutes()}`;
+      const formattedNextClaimTime = `${nextClaimTime.getHours()}:${nextClaimTime.getMinutes()}`;
 
-        setNextClaimTime(formattedNextClaimTime);
+      setNextClaimTime(formattedNextClaimTime);
 
-        setDailyCoinReward(coinRewardResponse.data);
-      } catch (error) {
-        console.error("Error while fetching user details", error);
-      }
-    };
+      setDailyCoinReward(coinRewardResponse.data);
+    } catch (error) {
+      console.error("Error while fetching user details", error);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [username]);
 
