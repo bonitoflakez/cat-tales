@@ -65,16 +65,17 @@ export const getStoreItems = async (req: Request, res: Response) => {
       ...GroomingSupplies,
     ];
 
-    const itemNamesWithDetails = getItemDetails(storeItems);
+    const storeDataWithDetails = getItemDetails(storeItems);  
 
     return res.status(200).json({
-      itemNames: itemNamesWithDetails,
+      storeDataWithDetails
     });
   } catch (err) {
     console.error("Error fetching store items:", err);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 export const buyStoreItem = async (req: Request, res: Response) => {
   const client = await pool.connect();

@@ -10,7 +10,7 @@ export const getCatDetails = async (req: Request, res: Response) => {
 
     if (catDetailsResult.rowCount === 0) {
       return res.status(200).json({ 
-        message: "This player has no cats!!??",
+        message: "This player has no cats",
         has_cats: false
       });
     }

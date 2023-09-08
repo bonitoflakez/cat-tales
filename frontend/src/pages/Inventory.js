@@ -6,38 +6,41 @@ export default function Inventory() {
   const [userItemsData, setUserItemsData] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [catName, setCatName] = useState("");
+  const [catId, setCatId] = useState("");
   const [message, setMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const username = "ooga";
 
+  const fetchData = async () => {
+    try {
+      const userResponse = await axios.get(
+        `http://localhost:8000/api/player/getPlayer/${username}`
+      );
+
+      const playerId = userResponse.data.user_id;
+
+      const catResponse = await axios.get(
+        `http://localhost:8000/api/player/getPlayerCat/${playerId}`
+      );
+      setUserCatsData(catResponse.data);
+
+      const itemResponse = await axios.get(
+        `http://localhost:8000/api/player/getPlayerItem/${playerId}`
+      );
+      setUserItemsData(itemResponse.data);
+    } catch (error) {
+      console.error("Error while fetching user details", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userResponse = await axios.get(
-          `http://localhost:8000/api/player/getPlayer/${username}`
-        );
-
-        const playerId = userResponse.data.user_id;
-
-        const catResponse = await axios.get(
-          `http://localhost:8000/api/player/getPlayerCat/${playerId}`
-        );
-        setUserCatsData(catResponse.data);
-
-        const itemResponse = await axios.get(
-          `http://localhost:8000/api/player/getPlayerItem/${playerId}`
-        );
-        setUserItemsData(itemResponse.data);
-      } catch (error) {
-        console.error("Error while fetching user details", error);
-      }
-    };
-
-    fetchData();
+    fetchData(); // Fetch initial data when the component mounts
   }, [username]);
 
   const handleUseItemClick = (item) => {
     setSelectedItem(item);
+    setIsModalOpen(true);
   };
 
   const handleUseItem = async () => {
@@ -47,20 +50,20 @@ export default function Inventory() {
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:8000/api/player/useItem",
-        {
-          itemName: selectedItem.name,
-          type: selectedItem.type,
-          rarity: selectedItem.rarity,
-          userId: selectedItem.user_id,
-          catName: catName,
-        }
-      );
+      await axios.post("http://localhost:8000/api/player/useItem", {
+        itemName: selectedItem.name,
+        type: selectedItem.type,
+        rarity: selectedItem.rarity,
+        userId: selectedItem.user_id,
+        catName: catName,
+        catId: catId,
+      });
 
-      // Handle the response or any other logic you need
-      console.log(response.data);
+      setIsModalOpen(false);
       setMessage("Item used successfully!");
+
+      // Refetch the data after using the item
+      fetchData();
     } catch (error) {
       console.error("Error while using item", error);
       setMessage("Error while using item");
@@ -75,10 +78,12 @@ export default function Inventory() {
           {userCatsData.has_cats === false ? (
             <p>No cats found</p>
           ) : (
-            <ul>
+            <ul className="grid grid-cols-3 gap-2">
               {userCatsData.map((cat) => (
-                <li key={cat.id}>
-                  {cat.name}, level: {cat.level}
+                <li key={cat.id} className="border rounded-md p-2">
+                  <p>Name: {cat.name}</p>
+                  <p>level: {cat.level}</p>
+                  <p>Id: {cat.id}</p>
                 </li>
               ))}
             </ul>
@@ -89,13 +94,14 @@ export default function Inventory() {
           {userItemsData.has_items === false ? (
             <p>No items found</p>
           ) : (
-            <ul className="items">
+            <ul className="items grid grid-cols-3 gap-2">
               {userItemsData.map((item) => (
-                <div className="item" key={item.id}>
+                <div className="item border p-2 rounded-md" key={item.id}>
                   <li>
-                    {item.name}, rarity: {item.rarity}
+                    <p>{item.name}</p>
+                    <p>Rarity: {item.rarity}</p>
                     <button
-                      className="use-item border p-1 mt-1 ml-3 rounded-md"
+                      className="use-item border p-1 mt-1 rounded-md"
                       onClick={() => handleUseItemClick(item)}
                     >
                       Use this item
@@ -106,21 +112,46 @@ export default function Inventory() {
             </ul>
           )}
           {selectedItem && (
-            <div className="use-item-form">
-              <input
-                type="text"
-                placeholder="Enter cat name"
-                value={catName}
-                onChange={(e) => setCatName(e.target.value)}
-                className="bg-black p-1 rounded-md"
-              />
-              <button
-                className="use-item border p-1 mt-1 ml-3 rounded-md"
-                onClick={handleUseItem}
-              >
-                Use Item
-              </button>
-              <p>{message}</p>
+            /* Modal */
+            <div
+              className={`fixed inset-0 flex items-center justify-center ${
+                isModalOpen ? "block" : "hidden"
+              }`}
+            >
+              <div className="modal bg-neutral-900 w-1/2 p-4 rounded-md">
+                <h2 className="font-bold text-xl">Use Item</h2>
+                <div className="my-2">
+                  <input
+                    type="text"
+                    placeholder="Enter cat name"
+                    value={catName}
+                    onChange={(e) => setCatName(e.target.value)}
+                    className="bg-black p-1 rounded-md border"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Enter cat id"
+                    value={catId}
+                    onChange={(e) => setCatId(e.target.value)}
+                    className="bg-black p-1 mb-1 rounded-md border"
+                  />
+                </div>
+                <button
+                  className="use-item border p-1 mt-1 rounded-md"
+                  onClick={handleUseItem}
+                >
+                  Use Item
+                </button>
+                <button
+                  className="close-modal border p-1 mt-1 ml-2 rounded-md"
+                  onClick={() => setIsModalOpen(false)} // Close the modal when "Close" is clicked
+                >
+                  Close
+                </button>
+                <p>{message}</p>
+              </div>
             </div>
           )}
         </div>

@@ -19,7 +19,7 @@ export const getItemDetails = async (req: Request, res: Response) => {
 
     if (itemDetailsResult.rowCount === 0) {
       return res.status(200).json({ 
-        message: "This owner has no items!!??",
+        message: "This player has no cats",
         has_items: false
       });
     }
@@ -35,7 +35,7 @@ export const getItemDetails = async (req: Request, res: Response) => {
 export const useItem = async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
-    const { itemName, type, rarity, userId, catName } = req.body;
+    const { itemName, type, rarity, userId, catName, catId } = req.body;
     const itemTypeNumber = parseInt(type);
 
     await client.query("BEGIN");
@@ -66,8 +66,8 @@ export const useItem = async (req: Request, res: Response) => {
 
     let incXP = handleItemXPBoost(itemData.xp, rarity);
 
-    const getCatDataQuery = "SELECT * FROM cats WHERE name=$1";
-    const getCatDataValue = [catName];
+    const getCatDataQuery = "SELECT * FROM cats WHERE name=$1 AND id=$2";
+    const getCatDataValue = [catName, catId];
     const getCatDataResult = await client.query(
       getCatDataQuery,
       getCatDataValue
@@ -84,8 +84,8 @@ export const useItem = async (req: Request, res: Response) => {
 
     const updatedCatLevel = Math.floor(updatedCatXP / 100);
 
-    const updateCatQuery = "UPDATE cats SET xp=$1, level=$2 WHERE name=$3";
-    const updateCatValues = [updatedCatXP, updatedCatLevel, catName];
+    const updateCatQuery = "UPDATE cats SET xp=$1, level=$2 WHERE name=$3 AND id=$4";
+    const updateCatValues = [updatedCatXP, updatedCatLevel, catName, catId];
     await client.query(updateCatQuery, updateCatValues);
 
     const getPlayerXPQuery = "SELECT * FROM players WHERE user_id=$1";

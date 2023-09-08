@@ -83,33 +83,41 @@ export default function Dashboard() {
       <div className="dashboard-container m-4">
         <div className="dashboard-container-top text-white p-2 grid grid-cols-2 gap-2">
           <div className="dashboard-user-info bg-neutral-900 border rounded-md p-4">
-            <p className="user-name">username: {userData?.username}</p>
+            <p className="user-name">
+              <strong>Username:</strong> {userData?.username}
+            </p>
             <p className="user-id">
-              user id: {/* Add copy icon on front of uuid */}
+              <strong>User Id:</strong> {/* Add copy icon on front of uuid */}
               <span className="cursor-pointer" onClick={copyToClipboard}>
                 {isCopied ? "Copied to clipboard!" : `${userData?.user_id}`}
               </span>
             </p>
-            <p className="user-xp">xp: {userData?.xp}</p>
-            <p className="user-level">
-              level: {Math.floor(userData?.xp / 100)}
+            <p className="user-xp">
+              <strong>Player XP:</strong> {userData?.xp}
             </p>
-            <p className="user-coins">coins: {userData?.coins}</p>
+            <p className="user-level">
+              <strong>Player Level:</strong> {Math.floor(userData?.xp / 100)}
+            </p>
+            <p className="user-coins">
+              <strong>Coins:</strong> {userData?.coins}
+            </p>
           </div>
           <div className="dashboard-inventory-info bg-neutral-900 border rounded-md p-4">
-            <p className="user-cats">total cats: {userCatsData.length || 0}</p>
+            <p className="user-cats">
+              <strong>total cats:</strong> {userCatsData.length || 0}
+            </p>
             <p className="user-items">
-              total items: {userItemsData.length || 0}
+              <strong>total items:</strong> {userItemsData.length || 0}
             </p>
           </div>
         </div>
         <div className="dashboard-container-bottom text-white p-2">
           <div className="dashboard-additional-details bg-neutral-900 border rounded-md p-4">
             <p className="next-drop-in">
-              next drop will be available at: {nextClaimTime}
+              <strong>next drop will be available at:</strong> {nextClaimTime}
             </p>
             <p className="user-xp">
-              daily reward claimed:{" "}
+              <strong>daily reward claimed:</strong>{" "}
               {dailyCoinReward.status === "already_claimed"
                 ? dailyCoinReward.message
                 : dailyCoinReward.coins}
