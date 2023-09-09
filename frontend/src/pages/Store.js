@@ -48,7 +48,7 @@ export default function Store() {
 
   return (
     <>
-      <div className="dashboard-container m-4">
+      <div className="store-container m-4">
         <div className="store-items-data bg-neutral-900 border rounded-md p-4">
           {storeData.length === 0 ? (
             <p>Some error occurred while loading store items.</p>

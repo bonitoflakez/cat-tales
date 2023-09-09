@@ -24,15 +24,24 @@ export const dropDailyCoins = async (req: Request, res: Response) => {
 
     await client.query("BEGIN");
 
+    if (!user_id) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: "Invalid user id",
+        status: "failed",
+      });
+    }
+
     const userQuery =
       "SELECT user_id, last_claim_time FROM players WHERE user_id = $1";
     const userValue = [user_id];
     const userResult = await client.query(userQuery, userValue);
 
-    if (userResult.rowCount === 0 || !user_id) {
+    if (userResult.rowCount === 0) {
       await client.query("ROLLBACK");
       return res.status(400).json({
         message: "Invalid user",
+        status: "failed",
       });
     }
 
@@ -43,9 +52,41 @@ export const dropDailyCoins = async (req: Request, res: Response) => {
       await client.query("ROLLBACK");
       return res.status(200).json({
         message: "Coins already claimed",
+        last_claim_time: lastClaimTime,
         status: "already_claimed",
       });
     }
+
+    await client.query("COMMIT");
+
+    return res.status(200).json({
+      message: "Daily coin reward available",
+      status: "ready_to_claim",
+    });
+  } catch (err) {
+    console.error("Error getting coins amount:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  } finally {
+    client.release();
+  }
+};
+
+export const claimRewardCoins = async (req: Request, res: Response) => {
+  const client = await pool.connect();
+
+  try {
+    const { user_id } = req.body;
+
+    if (!user_id) {
+      res.status(400).json({
+        message: "Something went wrong while claiming reward coins",
+        status: "failed",
+      });
+    }
+
+    await client.query("BEGIN");
 
     const coins: coins = {
       amount: getRandCoins(),
@@ -53,12 +94,16 @@ export const dropDailyCoins = async (req: Request, res: Response) => {
 
     const updateLastClaimTimeQuery =
       "UPDATE players SET last_claim_time = $1 WHERE user_id = $2";
-    const updateLastClaimTimeValues = [new Date(), user_id];
-    await client.query(updateLastClaimTimeQuery, updateLastClaimTimeValues);
+    const updateLastclaimTimeValues = [new Date(), user_id];
+    await client.query(updateLastClaimTimeQuery, updateLastclaimTimeValues);
 
     await client.query("COMMIT");
 
-    return res.status(200).json(coins);
+    res.status(200).json({
+      message: "Claimed successfully!",
+      coins,
+      status: "claimed",
+    });
   } catch (err) {
     console.error("Error getting coins amount:", err);
     return res.status(500).json({

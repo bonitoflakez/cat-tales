@@ -1,9 +1,13 @@
 import express from "express";
 
-import { dropDailyCoins } from "../controllers/coinDrop.controller";
+import {
+  dropDailyCoins,
+  claimRewardCoins,
+} from "../controllers/coinDrop.controller";
 
 const router = express.Router();
 
-router.post("/coins", dropDailyCoins);
+router.post("/check", dropDailyCoins);
+router.post("/claim", claimRewardCoins);
 
 export default router;

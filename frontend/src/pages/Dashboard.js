@@ -5,8 +5,9 @@ export default function Dashboard() {
   const [userData, setUserData] = useState(null);
   const [userCatsData, setUserCatsData] = useState([]);
   const [userItemsData, setUserItemsData] = useState([]);
-  const [dailyCoinReward, setDailyCoinReward] = useState([]);
   const [nextClaimTime, setNextClaimTime] = useState([]);
+  const [dailyCoinCheck, setDailyCoinCheck] = useState([]);
+  const [claimResponse, setClaimResponse] = useState(null);
   const [isCopied, setIsCopied] = useState(false);
 
   const copyToClipboard = () => {
@@ -45,8 +46,8 @@ export default function Dashboard() {
       );
       setUserItemsData(itemResponse.data);
 
-      const coinRewardResponse = await axios.post(
-        `http://localhost:8000/api/daily/coins`,
+      const coinRewardCheck = await axios.post(
+        "http://localhost:8000/api/daily/check",
         {
           user_id: playerId,
         },
@@ -57,18 +58,61 @@ export default function Dashboard() {
         }
       );
 
-      const lastClaimTime = userResponse.data.last_claim_time;
+      const lastClaimTime = coinRewardCheck.data.last_claim_time;
       const lastClaimDate = new Date(lastClaimTime);
       const resetInterval = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
       const nextClaimTime = new Date(lastClaimDate.getTime() + resetInterval);
 
-      const formattedNextClaimTime = `${nextClaimTime.getHours()}:${nextClaimTime.getMinutes()}`;
+      const formatWithLeadingZero = (num) => (num < 10 ? `0${num}` : num);
+
+      const hours = nextClaimTime.getHours();
+      const minutes = nextClaimTime.getMinutes();
+      const amPm = hours >= 12 ? "PM" : "AM";
+
+      const formattedHours = formatWithLeadingZero(
+        hours > 12 ? hours - 12 : hours
+      );
+      const formattedMinutes = formatWithLeadingZero(minutes);
+
+      const formattedNextClaimTime = `${formattedHours}:${formattedMinutes} ${amPm}`;
 
       setNextClaimTime(formattedNextClaimTime);
 
-      setDailyCoinReward(coinRewardResponse.data);
+      setDailyCoinCheck(coinRewardCheck.data);
     } catch (error) {
       console.error("Error while fetching user details", error);
+    }
+  };
+
+  const handleClaimDailyReward = async () => {
+    try {
+      const playerId = userData?.user_id;
+
+      if (!playerId) {
+        console.error("User ID is missing.");
+        return;
+      }
+
+      if (dailyCoinCheck.status !== "ready_to_claim") {
+        console.log("Cannot claim daily reward at this time.");
+        return;
+      }
+
+      const claimResponse = await axios.post(
+        "http://localhost:8000/api/daily/claim",
+        {
+          user_id: playerId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      setClaimResponse(claimResponse.data);
+    } catch (error) {
+      console.error("Error while claiming daily reward", error);
     }
   };
 
@@ -115,11 +159,27 @@ export default function Dashboard() {
               <strong>next drop will be available at:</strong> {nextClaimTime}
             </p>
             <p className="user-xp">
-              <strong>daily reward claimed:</strong>{" "}
-              {dailyCoinReward.status === "already_claimed"
-                ? dailyCoinReward.message
-                : dailyCoinReward.coins}
+              <strong>daily reward claimed: </strong>
+              {dailyCoinCheck.status === "already_claimed" ||
+              dailyCoinCheck.status === "ready_to_claim"
+                ? dailyCoinCheck.message
+                : "Couldn't fetch reward status"}
             </p>
+            <button
+              className="claim-daily-reward border p-1 mt-2 rounded-md"
+              onClick={handleClaimDailyReward}
+              disabled={dailyCoinCheck.status !== "ready_to_claim"}
+            >
+              Claim Daily Reward
+            </button>
+            {claimResponse && (
+              <div className="claim-response">
+                <p>{claimResponse.message}</p>
+                {claimResponse.coins && (
+                  <p>Coins claimed: {claimResponse.coins.amount}</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
