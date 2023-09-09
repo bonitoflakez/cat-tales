@@ -45,9 +45,9 @@ export const dropRandomCat = async (req: Request, res: Response) => {
 
     if (userCurrentCoins < 500) {
       await client.query("ROLLBACK");
-      return res.status(400).json({
+      return res.status(203).json({
         message: "Insufficient amount of coins",
-        status: "Get rich",
+        status: "get_rich",
       });
     }
 
@@ -139,8 +139,8 @@ export const adoptCat = async (req: Request, res: Response) => {
       getPlayerCoinValue
     );
 
-    const coins = playerCoins.rows[0];
-    const rewardedCoins = coinReward + coins.coins;
+    const coins = playerCoins.rows[0].coins;
+    const rewardedCoins = coins + coinReward;
 
     const updatePlayerCoinQuery =
       "UPDATE currency SET coins = $1 WHERE user_id = $2";

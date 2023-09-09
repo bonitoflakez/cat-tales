@@ -12,43 +12,60 @@ import {
   calculateRarityXP,
 } from "../helpers/itemDrop.helper";
 
-export const dropRandomItem = async (req: Request, res: Response) => {
-  try {
-    const item = {
-      type: generateItemNameAndType(),
-      rarity: generateItemRarity(),
-    };
+// export const dropRandomItem = async (req: Request, res: Response) => {
+//   try {
+//     const item = {
+//       type: generateItemNameAndType(),
+//       rarity: generateItemRarity(),
+//     };
 
-    return res.status(200).json(item);
-  } catch (err) {
-    console.error("Error generating item:", err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
+//     return res.status(200).json(item);
+//   } catch (err) {
+//     console.error("Error generating item:", err);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 export const addDropItemToInventory = async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
-    const { name, type, rarity, user_id } = req.body;
+    const { user_id } = req.body;
+
+    if (!user_id) {
+      return res.status(400).json({
+        message: "Invalid user ID",
+        status: "failed",
+      });
+    }
+
+    const getItemNameAndType = generateItemNameAndType();
+    const getItemRarity = generateItemRarity();
+
+    const itemName = getItemNameAndType.name;
+    const itemType = getItemNameAndType.type;
+    const itemTypeId = getItemNameAndType.type_id;
+    const itemRarity = getItemRarity.item_rarity;
+    const itemRarityId = getItemRarity.item_rarity_id;
+
+    await client.query("BEGIN");
 
     const userQuery = "SELECT user_id FROM players WHERE user_id = $1";
     const userValue = [user_id];
     const userResult = await client.query(userQuery, userValue);
 
-    if (userResult.rowCount === 0 || !user_id) {
+    if (userResult.rowCount === 0) {
       await client.query("ROLLBACK");
       return res.status(400).json({
         message: "Invalid user",
+        status: "failed",
       });
     }
 
-    let rewardXP = calculateRarityXP(10, rarity);
-
-    await client.query("BEGIN");
+    let rewardXP = calculateRarityXP(10, itemRarityId);
 
     const insertQuery =
       "INSERT INTO items (name, type, rarity, user_id) VALUES ($1, $2, $3, $4)";
-    const values = [name, type, rarity, user_id];
+    const values = [itemName, itemTypeId, itemRarityId, user_id];
     await client.query(insertQuery, values);
 
     const getCurrentPlayerXPQuery = "SELECT xp FROM players WHERE user_id = $1";
@@ -92,12 +109,22 @@ export const addDropItemToInventory = async (req: Request, res: Response) => {
       getPlayerCoinValue
     );
 
-    const coins = playerCoins.rows[0];
-    const rewardedCoins = levelUpRewardCoins + coins.coins;
+    const coins = playerCoins.rows[0].coins;
+
+    if (coins < 500) {
+      await client.query("ROLLBACK");
+      return res.status(203).json({
+        message: "Insufficient amount of coins",
+        status: "get_rich",
+      });
+    }
+
+    const coinsAfterDeduction = coins - 500;
+    const finalCoins = coinsAfterDeduction + levelUpRewardCoins;
 
     const updatePlayerCoinQuery =
       "UPDATE currency SET coins=$1 WHERE user_id=$2";
-    const updatePlayerCoinValue = [rewardedCoins, user_id];
+    const updatePlayerCoinValue = [finalCoins, user_id];
     await client.query(updatePlayerCoinQuery, updatePlayerCoinValue);
 
     const updatePlayerXPQuery = "UPDATE players SET xp = $1 WHERE user_id = $2";
@@ -107,9 +134,12 @@ export const addDropItemToInventory = async (req: Request, res: Response) => {
     await client.query("COMMIT");
 
     return res.status(201).json({
-      message: "Item stored in inventory",
+      itemName: itemName,
+      itemRarity: itemRarity,
+      itemType: itemType,
       levelup: checkLevelUp(currentLVL, newLVL),
       rewardCoins: levelUpRewardCoins,
+      message: "Item stored in inventory",
     });
   } catch (err) {
     await client.query("ROLLBACK");

@@ -4,12 +4,16 @@ import axios from "axios";
 export default function Daily() {
   const [catData, setCatData] = useState([]);
   const [userData, setUserData] = useState([]);
+  const [itemData, setItemData] = useState([]);
   const [adoptCatName, setAdoptCatName] = useState("");
   const [nextClaimTime, setNextClaimTime] = useState([]);
   const [dailyCoinCheck, setDailyCoinCheck] = useState([]);
   const [claimResponse, setClaimResponse] = useState(null);
-  const [isCatNameModalOpen, setIsCatNameModalOpen] = useState(false);
   const [isCatDataFetched, setIsCatDataFetched] = useState(false);
+  const [isCatNameModalOpen, setIsCatNameModalOpen] = useState(false);
+  const [isInsufficientCoins, setIsInsufficientCoins] = useState(false);
+  const [isInsufficientCoinsForCatto, setIsInsufficientCoinsForCatto] =
+    useState(false);
 
   const username = "ooga";
 
@@ -111,6 +115,14 @@ export default function Daily() {
         }
       );
 
+      if (fetchCatto.data.status === "get_rich") {
+        setIsInsufficientCoinsForCatto(true);
+
+        setTimeout(() => {
+          setIsInsufficientCoinsForCatto(false);
+        }, 2000);
+      }
+
       setIsCatDataFetched(true);
       setCatData(fetchCatto.data);
     } catch (error) {
@@ -130,23 +142,46 @@ export default function Daily() {
       const catType = catData.catType.typeId;
       const catLevel = catData.catLevel;
 
-      console.log(adoptCatName, catType, catLevel, playerId);
-
-      const adoptResponse = await axios.post(
-        "http://localhost:8000/api/cat/adopt",
-        {
-          name: adoptCatName,
-          type: catType,
-          level: catLevel,
-          user_id: playerId,
-        }
-      );
-
-      console.log(adoptResponse.data);
+      await axios.post("http://localhost:8000/api/cat/adopt", {
+        name: adoptCatName,
+        type: catType,
+        level: catLevel,
+        user_id: playerId,
+      });
     } catch (error) {
       console.error("Error while adopting a cat:", error);
     } finally {
       closeCatNameModal();
+    }
+  };
+
+  const fetchItemData = async () => {
+    try {
+      const playerId = userData?.user_id;
+
+      if (!playerId) {
+        console.error("User ID is missing");
+        return;
+      }
+
+      const itemDataresponse = await axios.post(
+        "http://localhost:8000/api/item/add",
+        {
+          user_id: playerId,
+        }
+      );
+
+      if (itemDataresponse.data.status === "get_rich") {
+        setIsInsufficientCoins(true);
+
+        setTimeout(() => {
+          setIsInsufficientCoins(false);
+        }, 2000);
+      }
+
+      setItemData(itemDataresponse.data);
+    } catch (error) {
+      console.error("Error while fetching item data:", error);
     }
   };
 
@@ -159,17 +194,26 @@ export default function Daily() {
       <div className="drop-container grid grid-cols-3 gap-2 m-4">
         <div className="item-drop border rounded-md p-2">
           <p>
-            <strong>Item name:</strong>{" "}
+            <strong>Item name: </strong>
+            {itemData.itemName || "Nothing to display"}
           </p>
           <p>
-            <strong>Item type:</strong>{" "}
+            <strong>Item type: </strong>
+            {itemData.itemType || "Nothing to display"}
           </p>
           <p>
-            <strong>Item rarity:</strong>{" "}
+            <strong>Item rarity: </strong>
+            {itemData.itemRarity || "Nothing to display"}
           </p>
-          <button className="border px-2 py-0.5 mt-2 rounded-md bg-neutral-900 hover:bg-neutral-800">
-            Add to inventory
+          <button
+            className="border px-2 py-0.5 mt-2 rounded-md bg-neutral-900 hover:bg-neutral-800"
+            onClick={fetchItemData}
+          >
+            Fetch an Item (Costs 500 coins)
           </button>
+          {isInsufficientCoins && (
+            <p className="font-bold p-2">Insufficient coins</p>
+          )}
         </div>
         <div className="cat-drop border rounded-md p-2">
           {isCatDataFetched ? (
@@ -235,6 +279,9 @@ export default function Daily() {
                 </button>
               </div>
             </div>
+          )}
+          {isInsufficientCoinsForCatto && (
+            <p className="font-bold p-2">Insufficient coins</p>
           )}
         </div>
         <div className="coin-drop border rounded-md p-2">
