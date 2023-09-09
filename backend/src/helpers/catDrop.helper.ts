@@ -33,11 +33,17 @@ export function generateCatType() {
   for (const rarity of rarities) {
     cumulativeWeight += rarity.weight;
     if (randomNumber <= cumulativeWeight) {
-      return { typeId: rarity.id, type: rarity.itemRarity };
+      return {
+        typeId: rarity.id,
+        typeName: rarity.itemRarity,
+      };
     }
   }
 
-  return { typeId: rarities[0].id, type: rarities[0].itemRarity };
+  return {
+    typeId: rarities[0].id,
+    typeName: rarities[0].itemRarity,
+  };
 }
 
 export function generateCatLevel() {

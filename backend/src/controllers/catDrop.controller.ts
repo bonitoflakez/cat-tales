@@ -10,16 +10,67 @@ import {
 } from "../helpers/catDrop.helper";
 
 export const dropRandomCat = async (req: Request, res: Response) => {
+  const client = await pool.connect();
   try {
+    const { user_id } = req.body;
+
+    if (!user_id) {
+      return res.status(400).json({
+        message: "Invalid user id",
+        status: "failed",
+      });
+    }
+
+    await client.query("BEGIN");
+
+    const deductedCoins = 500;
+
+    const userCoinDeductionQuery =
+      "SELECT coins FROM currency WHERE user_id = $1";
+    const userCoinDeductionValues = [user_id];
+    const userCoinDeductionResult = await client.query(
+      userCoinDeductionQuery,
+      userCoinDeductionValues
+    );
+
+    if (userCoinDeductionResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: "Unable to process transaction",
+        status: "transaction_failed",
+      });
+    }
+
+    const userCurrentCoins = userCoinDeductionResult.rows[0].coins;
+
+    if (userCurrentCoins < 500) {
+      await client.query("ROLLBACK");
+      return res.status(203).json({
+        message: "Insufficient amount of coins",
+        status: "get_rich",
+      });
+    }
+
+    const userUpdateCoins = userCurrentCoins - deductedCoins;
+
+    const updateCoinsQuery =
+      "UPDATE currency SET coins = $1 WHERE user_id = $2";
+    const updateCoinsValues = [userUpdateCoins, user_id];
+    await client.query(updateCoinsQuery, updateCoinsValues);
+
     const cat = {
-      type: generateCatType(),
-      level: generateCatLevel(),
+      catType: generateCatType(),
+      catLevel: generateCatLevel(),
     };
+
+    await client.query("COMMIT");
 
     return res.status(200).json(cat);
   } catch (err) {
     console.error("Error generating a random cat:", err);
     return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    client.release();
   }
 };
 
@@ -88,8 +139,8 @@ export const adoptCat = async (req: Request, res: Response) => {
       getPlayerCoinValue
     );
 
-    const coins = playerCoins.rows[0];
-    const rewardedCoins = coinReward + coins.coins;
+    const coins = playerCoins.rows[0].coins;
+    const rewardedCoins = coins + coinReward;
 
     const updatePlayerCoinQuery =
       "UPDATE currency SET coins = $1 WHERE user_id = $2";
