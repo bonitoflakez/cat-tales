@@ -1,14 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router";
 
 export default function Store() {
   const [storeData, setStoreData] = useState([]);
   const [playerData, setPlayerData] = useState([]);
   const [message, setMessage] = useState("");
 
-  const username = "ooga";
+  const navigate = useNavigate();
 
-  const fetchData = async () => {
+  const userInfo = JSON.parse(localStorage.getItem("userData"));
+  const username = userInfo?.user;
+
+  const fetchData = useCallback(async () => {
+    if (!username) {
+      navigate("/auth");
+      return;
+    }
+
     try {
       const storeDataResponse = await axios.get(
         "http://localhost:8000/api/store/getItems"
@@ -23,11 +32,11 @@ export default function Store() {
     } catch (error) {
       console.error("Error while fetching store data: ", error);
     }
-  };
+  }, [username, navigate]);
 
   useEffect(() => {
     fetchData();
-  }, [username]);
+  }, [username, fetchData]);
 
   const handleBuyItem = async (item) => {
     try {

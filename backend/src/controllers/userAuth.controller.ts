@@ -1,10 +1,11 @@
-import { Request, Response } from "express";
-import bcrypt from "bcrypt";
+import { NextFunction, Request, Response } from "express";
 import jwt, { Secret } from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
+import bcrypt from "bcrypt";
+
 import pool from "../models/db";
 
-const secretKey: Secret = "supersecuresecret";
+export const secretKey: Secret = "supersecuresecret";
 
 export const signUp = async (req: Request, res: Response) => {
   try {
@@ -29,7 +30,7 @@ export const signUp = async (req: Request, res: Response) => {
     } = await pool.query(insertUserQuery, insertUserValues);
 
     if (user) {
-      let token = jwt.sign(
+      const token = jwt.sign(
         {
           id: user.user_id,
         },
@@ -62,6 +63,7 @@ export const signUp = async (req: Request, res: Response) => {
           user_id: user.user_id,
           coins: "100 coins added as signup reward",
         },
+        token: token,
       });
     } else {
       return res.status(401).send({
@@ -96,7 +98,7 @@ export const login = async (req: Request, res: Response) => {
       const isSame = await bcrypt.compare(password, userData.password);
 
       if (isSame) {
-        let token = jwt.sign(
+        const token = jwt.sign(
           {
             id: userData.user_id,
           },
@@ -118,6 +120,7 @@ export const login = async (req: Request, res: Response) => {
             email: userData.email,
             user_id: userData.user_id,
           },
+          token: token,
         });
       } else {
         return res.status(401).send({

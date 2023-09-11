@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router";
 
 export default function Daily() {
   const [catData, setCatData] = useState([]);
@@ -15,7 +16,10 @@ export default function Daily() {
   const [isInsufficientCoinsForCatto, setIsInsufficientCoinsForCatto] =
     useState(false);
 
-  const username = "ooga";
+  const navigate = useNavigate();
+
+  const userInfo = JSON.parse(localStorage.getItem("userData"));
+  const username = userInfo?.user;
 
   const openCatNameModal = () => {
     setIsCatNameModalOpen(true);
@@ -25,7 +29,12 @@ export default function Daily() {
     setIsCatNameModalOpen(false);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!username) {
+      navigate("/auth");
+      return;
+    }
+
     try {
       const userResponse = await axios.get(
         `http://localhost:8000/api/player/getPlayer/${username}`
@@ -70,7 +79,7 @@ export default function Daily() {
     } catch (error) {
       console.error("Error while fetching user details", error);
     }
-  };
+  }, [username, navigate]);
 
   const handleClaimDailyReward = async () => {
     try {
@@ -187,7 +196,7 @@ export default function Daily() {
 
   useEffect(() => {
     fetchData();
-  }, [username]);
+  }, [username, fetchData]);
 
   return (
     <>

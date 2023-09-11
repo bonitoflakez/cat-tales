@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router";
 
 export default function Inventory() {
   const [userCatsData, setUserCatsData] = useState([]);
@@ -10,9 +11,17 @@ export default function Inventory() {
   const [message, setMessage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const username = "ooga";
+  const navigate = useNavigate();
 
-  const fetchData = async () => {
+  const userInfo = JSON.parse(localStorage.getItem("userData"));
+  const username = userInfo?.user;
+
+  const fetchData = useCallback(async () => {
+    if (!username) {
+      navigate("/auth");
+      return;
+    }
+
     try {
       const userResponse = await axios.get(
         `http://localhost:8000/api/player/getPlayer/${username}`
@@ -32,11 +41,11 @@ export default function Inventory() {
     } catch (error) {
       console.error("Error while fetching user details", error);
     }
-  };
+  }, [username, navigate]);
 
   useEffect(() => {
     fetchData();
-  }, [username]);
+  }, [username, fetchData]);
 
   const handleUseItemClick = (item) => {
     setSelectedItem(item);
