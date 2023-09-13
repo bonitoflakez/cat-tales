@@ -1,25 +1,11 @@
-import express from "express";
-import { Request, Response } from "express";
-
-import { login, signUp } from "../controllers/userAuth.controller";
-
+import express, { Request, Response } from "express";
 import saveUser from "../middleware/userCheck";
-import { authTokenVerification } from "../middleware/authTokenVerification";
-
-interface CustomRequest extends Request {
-  user?: any;
-}
+import { login, signUp } from "../controllers/userAuth.controller";
+import verifyToken from "../middleware/tokenVerify";
 
 const router = express.Router();
 
-router.post(
-  "/login",
-  login,
-  authTokenVerification,
-  (req: CustomRequest, res: Response) => {
-    res.json({ message: "Authenticated route", user: req.user });
-  }
-);
+router.post("/login", login, verifyToken);
 router.post("/signup", saveUser, signUp);
 
 export default router;

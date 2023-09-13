@@ -18,9 +18,9 @@ export const getItemDetails = async (req: Request, res: Response) => {
     const itemDetailsResult = await pool.query(itemQuery, itemOwnerValue);
 
     if (itemDetailsResult.rowCount === 0) {
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: "This player has no cats",
-        has_items: false
+        has_items: false,
       });
     }
 
@@ -84,7 +84,8 @@ export const useItem = async (req: Request, res: Response) => {
 
     const updatedCatLevel = Math.floor(updatedCatXP / 100);
 
-    const updateCatQuery = "UPDATE cats SET xp=$1, level=$2 WHERE name=$3 AND id=$4";
+    const updateCatQuery =
+      "UPDATE cats SET xp=$1, level=$2 WHERE name=$3 AND id=$4";
     const updateCatValues = [updatedCatXP, updatedCatLevel, catName, catId];
     await client.query(updateCatQuery, updateCatValues);
 

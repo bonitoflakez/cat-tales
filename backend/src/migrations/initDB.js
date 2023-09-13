@@ -2,14 +2,16 @@ const { Pool } = require("pg");
 const fs = require("fs");
 const path = require("path");
 
+require("dotenv").config();
+
 async function main() {
   try {
     const databaseConfig = {
-      user: "postgres",
-      password: "user@postgres",
-      host: "localhost",
-      port: 5432,
-      database: "cat_tale_db",
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWD,
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      database: process.env.DB_NAME,
     };
 
     const pool = new Pool(databaseConfig);
