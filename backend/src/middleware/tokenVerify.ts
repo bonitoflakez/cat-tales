@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import jwt, { Secret } from "jsonwebtoken";
 
 interface JwtPayload {
@@ -14,7 +14,11 @@ declare global {
   }
 }
 
-export const verifyToken = async (req: Request, res: Response) => {
+export const verifyToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const authHeaderToken = req.header("Authorization");
 
@@ -37,10 +41,7 @@ export const verifyToken = async (req: Request, res: Response) => {
       });
     }
 
-    return res.status(201).json({
-      authStatus: "Successful",
-      authToken: decode,
-    });
+    next();
   } catch (error) {
     return res.status(403).json({
       message: "Invalid token",

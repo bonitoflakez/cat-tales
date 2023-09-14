@@ -19,7 +19,7 @@ export const getItemDetails = async (req: Request, res: Response) => {
 
     if (itemDetailsResult.rowCount === 0) {
       return res.status(200).json({
-        message: "This player has no cats",
+        message: "This player has no itmes",
         has_items: false,
       });
     }

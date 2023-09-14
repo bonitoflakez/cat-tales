@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useHistory from react-router-dom
+import { useNavigate } from "react-router-dom";
 
 export default function Auth() {
   const [username, setUsername] = useState("");
@@ -8,17 +8,6 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
-
-  //
-  // const axiosWithAuth = () => {
-  //   const token = localStorage.getItem("authToken");
-  //   return axios.create({
-  //     baseURL: "http://localhost:8000/api", // Backend Base URL
-  //     headers: {
-  //       Authorization: `Bearer ${token}`, // token in the Authorization header
-  //     },
-  //   });
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,7 +26,13 @@ export default function Auth() {
       if (response.data.authStatus === "authorized") {
         const token = response.data.token;
 
-        localStorage.setItem("authToken", token);
+        const userData = {
+          user_token: token,
+          user_name: username,
+          user_id: response.data.user_id,
+        };
+
+        localStorage.setItem("userData", JSON.stringify(userData));
 
         navigate("/");
       }

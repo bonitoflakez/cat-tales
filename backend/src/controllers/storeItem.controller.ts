@@ -20,10 +20,6 @@ import {
   getCachedItemData,
 } from "../helpers/storeItem.helper";
 
-/**
- * todo: find a better way to increment price of items based on their rarity
- */
-
 export const getStoreItems = async (req: Request, res: Response) => {
   try {
     const getItemDetails = (items: ItemType[]) =>

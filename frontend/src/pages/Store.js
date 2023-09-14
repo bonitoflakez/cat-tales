@@ -1,52 +1,47 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router";
 
 export default function Store() {
   const [storeData, setStoreData] = useState([]);
-  const [playerData, setPlayerData] = useState([]);
   const [message, setMessage] = useState("");
 
-  const navigate = useNavigate();
+  const userLocalData = JSON.parse(localStorage.getItem("userData"));
 
-  const userInfo = JSON.parse(localStorage.getItem("userData"));
-  const username = userInfo?.user;
+  const user_id = userLocalData?.user_id;
+  const user_token = userLocalData?.user_token;
 
   const fetchData = useCallback(async () => {
-    if (!username) {
-      navigate("/auth");
-      return;
-    }
-
     try {
       const storeDataResponse = await axios.get(
         "http://localhost:8000/api/store/getItems"
       );
       setStoreData(storeDataResponse.data.storeDataWithDetails);
-
-      const userResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayer/${username}`
-      );
-
-      setPlayerData(userResponse.data);
     } catch (error) {
       console.error("Error while fetching store data: ", error);
     }
-  }, [username, navigate]);
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, [username, fetchData]);
+  }, [fetchData]);
 
   const handleBuyItem = async (item) => {
     try {
-      await axios.post("http://localhost:8000/api/store/buyItem", {
-        name: item.name,
-        type: item.type_id,
-        rarity: item.rarity_id,
-        price: item.price,
-        user_id: playerData.user_id,
-      });
+      await axios.post(
+        "http://localhost:8000/api/store/buyItem",
+        {
+          name: item.name,
+          type: item.type_id,
+          rarity: item.rarity_id,
+          price: item.price,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
+      );
 
       setMessage("Item added to your inventory!");
     } catch (error) {

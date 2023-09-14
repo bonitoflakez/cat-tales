@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router";
 
 export default function Daily() {
   const [catData, setCatData] = useState([]);
-  const [userData, setUserData] = useState([]);
   const [itemData, setItemData] = useState([]);
   const [adoptCatName, setAdoptCatName] = useState("");
   const [nextClaimTime, setNextClaimTime] = useState([]);
@@ -16,10 +14,11 @@ export default function Daily() {
   const [isInsufficientCoinsForCatto, setIsInsufficientCoinsForCatto] =
     useState(false);
 
-  const navigate = useNavigate();
+  const userLocalData = JSON.parse(localStorage.getItem("userData"));
 
-  const userInfo = JSON.parse(localStorage.getItem("userData"));
-  const username = userInfo?.user;
+  const username = userLocalData?.user_name;
+  const user_id = userLocalData?.user_id;
+  const user_token = userLocalData?.user_token;
 
   const openCatNameModal = () => {
     setIsCatNameModalOpen(true);
@@ -30,27 +29,16 @@ export default function Daily() {
   };
 
   const fetchData = useCallback(async () => {
-    if (!username) {
-      navigate("/auth");
-      return;
-    }
-
     try {
-      const userResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayer/${username}`
-      );
-      setUserData(userResponse.data);
-
-      const playerId = userResponse.data.user_id;
-
       const coinRewardCheck = await axios.post(
         "http://localhost:8000/api/daily/check",
         {
-          user_id: playerId,
+          user_id: user_id,
         },
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${user_token}`,
           },
         }
       );
@@ -79,13 +67,11 @@ export default function Daily() {
     } catch (error) {
       console.error("Error while fetching user details", error);
     }
-  }, [username, navigate]);
+  }, [user_id, user_token]);
 
   const handleClaimDailyReward = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing.");
         return;
       }
@@ -98,7 +84,12 @@ export default function Daily() {
       const claimResponse = await axios.post(
         "http://localhost:8000/api/daily/claim",
         {
-          user_id: playerId,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
         }
       );
 
@@ -110,9 +101,7 @@ export default function Daily() {
 
   const handleCatDataFetching = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing");
         return;
       }
@@ -120,7 +109,12 @@ export default function Daily() {
       const fetchCatto = await axios.post(
         "http://localhost:8000/api/cat/drop",
         {
-          user_id: playerId,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
         }
       );
 
@@ -141,9 +135,7 @@ export default function Daily() {
 
   const handleAdoptCatWithName = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing.");
         return;
       }
@@ -151,12 +143,20 @@ export default function Daily() {
       const catType = catData.catType.typeId;
       const catLevel = catData.catLevel;
 
-      await axios.post("http://localhost:8000/api/cat/adopt", {
-        name: adoptCatName,
-        type: catType,
-        level: catLevel,
-        user_id: playerId,
-      });
+      await axios.post(
+        "http://localhost:8000/api/cat/adopt",
+        {
+          name: adoptCatName,
+          type: catType,
+          level: catLevel,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
+      );
     } catch (error) {
       console.error("Error while adopting a cat:", error);
     } finally {
@@ -166,9 +166,7 @@ export default function Daily() {
 
   const fetchItemData = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing");
         return;
       }
@@ -176,7 +174,7 @@ export default function Daily() {
       const itemDataresponse = await axios.post(
         "http://localhost:8000/api/item/add",
         {
-          user_id: playerId,
+          user_id: user_id,
         }
       );
 

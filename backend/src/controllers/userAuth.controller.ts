@@ -71,11 +71,7 @@ export const signUp = async (req: Request, res: Response) => {
   }
 };
 
-export const login = async (
-  req: Request,
-  res: Response,
-  next: NextFunction // Add NextFunction parameter here
-) => {
+export const login = async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
     const { username, password } = req.body;
@@ -112,17 +108,13 @@ export const login = async (
           httpOnly: true,
         });
 
-        // return res.status(201).send({
-        //   authStatus: "authorized",
-        //   message: {
-        //     username: userData.username,
-        //     email: userData.email,
-        //     user_id: userData.user_id,
-        //   },
-        //   token: token,
-        // });
-
-        next();
+        return res.status(201).send({
+          authStatus: "authorized",
+          username: userData.username,
+          email: userData.email,
+          user_id: userData.user_id,
+          token: token,
+        });
       } else {
         return res.status(401).send({
           authStatus: "unauthorized",

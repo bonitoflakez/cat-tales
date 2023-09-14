@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import axios from "axios";
 
 import { claimTimeCalculator } from "../utils/claimTimeCalculator";
@@ -13,57 +12,54 @@ export default function Dashboard() {
   const [claimResponse, setClaimResponse] = useState(null);
   const [isCopied, setIsCopied] = useState(false);
 
-  const navigate = useNavigate();
+  const userLocalData = JSON.parse(localStorage.getItem("userData"));
 
-  const userInfo = JSON.parse(localStorage.getItem("userData"));
-  const username = userInfo?.user;
-
-  const copyToClipboard = () => {
-    navigator.clipboard
-      .writeText(userData?.user_id)
-      .then(() => {
-        setIsCopied(true);
-        setTimeout(() => {
-          setIsCopied(false);
-        }, 2000); // 2 sec in ms
-      })
-      .catch((error) => {
-        console.error("Failed to copy: ", error);
-      });
-  };
+  const username = userLocalData?.user_name;
+  const user_id = userLocalData?.user_id;
+  const user_token = userLocalData?.user_token;
 
   const fetchData = useCallback(async () => {
-    if (!username) {
-      navigate("/auth");
-      return;
-    }
-
     try {
       const userResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayer/${username}`
+        `http://localhost:8000/api/player/getPlayer/${username}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
       );
+
       setUserData(userResponse.data);
 
-      const playerId = userResponse.data.user_id;
-
       const catResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayerCat/${playerId}`
+        `http://localhost:8000/api/player/getPlayerCat/${user_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
       );
       setUserCatsData(catResponse.data);
 
       const itemResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayerItem/${playerId}`
+        `http://localhost:8000/api/player/getPlayerItem/${user_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
       );
       setUserItemsData(itemResponse.data);
 
       const coinRewardCheck = await axios.post(
         "http://localhost:8000/api/daily/check",
         {
-          user_id: playerId,
+          user_id: user_id,
         },
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${user_token}`,
           },
         }
       );
@@ -76,13 +72,25 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Error while fetching user details", error);
     }
-  }, [username, navigate]);
+  }, [user_id, username, user_token]);
+
+  const copyToClipboard = () => {
+    navigator.clipboard
+      .writeText(user_id)
+      .then(() => {
+        setIsCopied(true);
+        setTimeout(() => {
+          setIsCopied(false);
+        }, 2000); // 2 sec in ms
+      })
+      .catch((error) => {
+        console.error("Failed to copy: ", error);
+      });
+  };
 
   const handleClaimDailyReward = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing.");
         return;
       }
@@ -95,11 +103,12 @@ export default function Dashboard() {
       const claimResponse = await axios.post(
         "http://localhost:8000/api/daily/claim",
         {
-          user_id: playerId,
+          user_id: user_id,
         },
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${user_token}`,
           },
         }
       );
@@ -112,7 +121,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
-  }, [username, fetchData]);
+  }, [user_token, fetchData]);
 
   function UserInfo({ userData }) {
     return (

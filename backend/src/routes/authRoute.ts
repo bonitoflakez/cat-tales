@@ -5,7 +5,7 @@ import verifyToken from "../middleware/tokenVerify";
 
 const router = express.Router();
 
-router.post("/login", login, verifyToken);
+router.post("/login", login);
 router.post("/signup", saveUser, signUp);
 
 export default router;
