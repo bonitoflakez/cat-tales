@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 export default function Daily() {
   const [catData, setCatData] = useState([]);
-  const [userData, setUserData] = useState([]);
   const [itemData, setItemData] = useState([]);
   const [adoptCatName, setAdoptCatName] = useState("");
   const [nextClaimTime, setNextClaimTime] = useState([]);
   const [dailyCoinCheck, setDailyCoinCheck] = useState([]);
+  const [userCoin, setUserCoins] = useState([]);
   const [claimResponse, setClaimResponse] = useState(null);
   const [isCatDataFetched, setIsCatDataFetched] = useState(false);
   const [isCatNameModalOpen, setIsCatNameModalOpen] = useState(false);
@@ -15,7 +15,11 @@ export default function Daily() {
   const [isInsufficientCoinsForCatto, setIsInsufficientCoinsForCatto] =
     useState(false);
 
-  const username = "ooga";
+  const userLocalData = JSON.parse(localStorage.getItem("userData"));
+
+  const username = userLocalData?.user_name;
+  const user_id = userLocalData?.user_id;
+  const user_token = userLocalData?.user_token;
 
   const openCatNameModal = () => {
     setIsCatNameModalOpen(true);
@@ -25,23 +29,28 @@ export default function Daily() {
     setIsCatNameModalOpen(false);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const userResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayer/${username}`
+      const userData = await axios.get(
+        `http://localhost:8000/api/player/getPlayer/${username}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
       );
-      setUserData(userResponse.data);
 
-      const playerId = userResponse.data.user_id;
+      setUserCoins(userData.data.coins);
 
       const coinRewardCheck = await axios.post(
         "http://localhost:8000/api/daily/check",
         {
-          user_id: playerId,
+          user_id: user_id,
         },
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${user_token}`,
           },
         }
       );
@@ -70,13 +79,11 @@ export default function Daily() {
     } catch (error) {
       console.error("Error while fetching user details", error);
     }
-  };
+  }, [user_id, user_token, username]);
 
   const handleClaimDailyReward = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing.");
         return;
       }
@@ -89,9 +96,16 @@ export default function Daily() {
       const claimResponse = await axios.post(
         "http://localhost:8000/api/daily/claim",
         {
-          user_id: playerId,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
         }
       );
+
+      await fetchData();
 
       setClaimResponse(claimResponse.data);
     } catch (error) {
@@ -101,9 +115,7 @@ export default function Daily() {
 
   const handleCatDataFetching = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing");
         return;
       }
@@ -111,7 +123,12 @@ export default function Daily() {
       const fetchCatto = await axios.post(
         "http://localhost:8000/api/cat/drop",
         {
-          user_id: playerId,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
         }
       );
 
@@ -123,6 +140,8 @@ export default function Daily() {
         }, 2000);
       }
 
+      await fetchData();
+
       setIsCatDataFetched(true);
       setCatData(fetchCatto.data);
     } catch (error) {
@@ -132,9 +151,7 @@ export default function Daily() {
 
   const handleAdoptCatWithName = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing.");
         return;
       }
@@ -142,12 +159,20 @@ export default function Daily() {
       const catType = catData.catType.typeId;
       const catLevel = catData.catLevel;
 
-      await axios.post("http://localhost:8000/api/cat/adopt", {
-        name: adoptCatName,
-        type: catType,
-        level: catLevel,
-        user_id: playerId,
-      });
+      await axios.post(
+        "http://localhost:8000/api/cat/adopt",
+        {
+          name: adoptCatName,
+          type: catType,
+          level: catLevel,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
+      );
     } catch (error) {
       console.error("Error while adopting a cat:", error);
     } finally {
@@ -157,9 +182,7 @@ export default function Daily() {
 
   const fetchItemData = async () => {
     try {
-      const playerId = userData?.user_id;
-
-      if (!playerId) {
+      if (!user_id) {
         console.error("User ID is missing");
         return;
       }
@@ -167,7 +190,12 @@ export default function Daily() {
       const itemDataresponse = await axios.post(
         "http://localhost:8000/api/item/add",
         {
-          user_id: playerId,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
         }
       );
 
@@ -179,6 +207,8 @@ export default function Daily() {
         }, 2000);
       }
 
+      await fetchData();
+
       setItemData(itemDataresponse.data);
     } catch (error) {
       console.error("Error while fetching item data:", error);
@@ -187,11 +217,14 @@ export default function Daily() {
 
   useEffect(() => {
     fetchData();
-  }, [username]);
+  }, [username, fetchData]);
 
   return (
     <>
       <div className="drop-container grid grid-cols-3 gap-2 m-4">
+        <div className="fixed top-0 right-0 p-4 m-4 bg-neutral-800 text-white text-md font-semibold border drop-shadow-md rounded-lg">
+          <p>Coins: {userCoin}</p>
+        </div>
         <div className="item-drop border rounded-md p-2">
           <p>
             <strong>Item name: </strong>

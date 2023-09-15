@@ -3,12 +3,13 @@ import { getCatDetails } from "../controllers/cat.controller";
 import { getPlayerProfile } from "../controllers/player.controller";
 import { getItemDetails } from "../controllers/item.controller";
 import { useItem } from "../controllers/item.controller";
+import verifyToken from "../middleware/tokenVerify";
 
 const router = express.Router();
 
-router.get("/getPlayerCat/:userId", getCatDetails);
-router.get("/getPlayer/:username", getPlayerProfile);
-router.get("/getPlayerItem/:userId", getItemDetails);
-router.post("/useItem", useItem);
+router.get("/getPlayerCat/:userId", verifyToken, getCatDetails);
+router.get("/getPlayer/:username", verifyToken, getPlayerProfile);
+router.get("/getPlayerItem/:userId", verifyToken, getItemDetails);
+router.post("/useItem", verifyToken, useItem);
 
 export default router;

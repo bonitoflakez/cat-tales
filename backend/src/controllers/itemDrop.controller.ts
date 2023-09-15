@@ -12,20 +12,6 @@ import {
   calculateRarityXP,
 } from "../helpers/itemDrop.helper";
 
-// export const dropRandomItem = async (req: Request, res: Response) => {
-//   try {
-//     const item = {
-//       type: generateItemNameAndType(),
-//       rarity: generateItemRarity(),
-//     };
-
-//     return res.status(200).json(item);
-//   } catch (err) {
-//     console.error("Error generating item:", err);
-//     return res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
 export const addDropItemToInventory = async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {

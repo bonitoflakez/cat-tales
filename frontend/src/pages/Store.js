@@ -1,43 +1,62 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 export default function Store() {
+  const [userCoins, setUserCoins] = useState([]);
   const [storeData, setStoreData] = useState([]);
-  const [playerData, setPlayerData] = useState([]);
   const [message, setMessage] = useState("");
 
-  const username = "ooga";
+  const userLocalData = JSON.parse(localStorage.getItem("userData"));
 
-  const fetchData = async () => {
+  const username = userLocalData?.user_name;
+  const user_id = userLocalData?.user_id;
+  const user_token = userLocalData?.user_token;
+
+  const fetchData = useCallback(async () => {
     try {
+      const userData = await axios.get(
+        `http://localhost:8000/api/player/getPlayer/${username}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
+      );
+
+      setUserCoins(userData.data.coins);
+
       const storeDataResponse = await axios.get(
         "http://localhost:8000/api/store/getItems"
       );
       setStoreData(storeDataResponse.data.storeDataWithDetails);
-
-      const userResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayer/${username}`
-      );
-
-      setPlayerData(userResponse.data);
     } catch (error) {
       console.error("Error while fetching store data: ", error);
     }
-  };
+  }, [user_token, username]);
 
   useEffect(() => {
     fetchData();
-  }, [username]);
+  }, [fetchData]);
 
   const handleBuyItem = async (item) => {
     try {
-      await axios.post("http://localhost:8000/api/store/buyItem", {
-        name: item.name,
-        type: item.type_id,
-        rarity: item.rarity_id,
-        price: item.price,
-        user_id: playerData.user_id,
-      });
+      await axios.post(
+        "http://localhost:8000/api/store/buyItem",
+        {
+          name: item.name,
+          type: item.type_id,
+          rarity: item.rarity_id,
+          price: item.price,
+          user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
+      );
+
+      await fetchData();
 
       setMessage("Item added to your inventory!");
     } catch (error) {
@@ -49,6 +68,9 @@ export default function Store() {
   return (
     <>
       <div className="store-container m-4">
+        <div className="fixed top-0 right-0 p-4 m-4 bg-neutral-800 text-white text-md font-semibold border drop-shadow-md rounded-lg">
+          <p>Coins: {userCoins}</p>
+        </div>
         <div className="store-items-data bg-neutral-900 border rounded-md p-4">
           {storeData.length === 0 ? (
             <p>Some error occurred while loading store items.</p>
