@@ -49,7 +49,7 @@ export const signUp = async (req: Request, res: Response) => {
 
     const insertCurrencyQuery =
       "INSERT INTO currency (user_id, coins) VALUES ($1, $2)";
-    const insertCurrencyValues = [user_id, 100];
+    const insertCurrencyValues = [user_id, 1000];
     await client.query(insertCurrencyQuery, insertCurrencyValues);
 
     await client.query("COMMIT");
@@ -60,7 +60,7 @@ export const signUp = async (req: Request, res: Response) => {
         username: user.username,
         email: user.email,
         user_id: user.user_id,
-        coins: "100 coins added as signup reward",
+        coins: "1000 coins added as signup reward",
       },
     });
   } catch (err) {

@@ -7,6 +7,7 @@ export default function Daily() {
   const [adoptCatName, setAdoptCatName] = useState("");
   const [nextClaimTime, setNextClaimTime] = useState([]);
   const [dailyCoinCheck, setDailyCoinCheck] = useState([]);
+  const [userCoin, setUserCoins] = useState([]);
   const [claimResponse, setClaimResponse] = useState(null);
   const [isCatDataFetched, setIsCatDataFetched] = useState(false);
   const [isCatNameModalOpen, setIsCatNameModalOpen] = useState(false);
@@ -30,6 +31,17 @@ export default function Daily() {
 
   const fetchData = useCallback(async () => {
     try {
+      const userData = await axios.get(
+        `http://localhost:8000/api/player/getPlayer/${username}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
+      );
+
+      setUserCoins(userData.data.coins);
+
       const coinRewardCheck = await axios.post(
         "http://localhost:8000/api/daily/check",
         {
@@ -67,7 +79,7 @@ export default function Daily() {
     } catch (error) {
       console.error("Error while fetching user details", error);
     }
-  }, [user_id, user_token]);
+  }, [user_id, user_token, username]);
 
   const handleClaimDailyReward = async () => {
     try {
@@ -92,6 +104,8 @@ export default function Daily() {
           },
         }
       );
+
+      await fetchData();
 
       setClaimResponse(claimResponse.data);
     } catch (error) {
@@ -125,6 +139,8 @@ export default function Daily() {
           setIsInsufficientCoinsForCatto(false);
         }, 2000);
       }
+
+      await fetchData();
 
       setIsCatDataFetched(true);
       setCatData(fetchCatto.data);
@@ -175,6 +191,11 @@ export default function Daily() {
         "http://localhost:8000/api/item/add",
         {
           user_id: user_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
         }
       );
 
@@ -185,6 +206,8 @@ export default function Daily() {
           setIsInsufficientCoins(false);
         }, 2000);
       }
+
+      await fetchData();
 
       setItemData(itemDataresponse.data);
     } catch (error) {
@@ -199,6 +222,9 @@ export default function Daily() {
   return (
     <>
       <div className="drop-container grid grid-cols-3 gap-2 m-4">
+        <div className="fixed top-0 right-0 p-4 m-4 bg-neutral-800 text-white text-md font-semibold border drop-shadow-md rounded-lg">
+          <p>Coins: {userCoin}</p>
+        </div>
         <div className="item-drop border rounded-md p-2">
           <p>
             <strong>Item name: </strong>

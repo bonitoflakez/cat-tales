@@ -2,16 +2,29 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
 export default function Store() {
+  const [userCoins, setUserCoins] = useState([]);
   const [storeData, setStoreData] = useState([]);
   const [message, setMessage] = useState("");
 
   const userLocalData = JSON.parse(localStorage.getItem("userData"));
 
+  const username = userLocalData?.user_name;
   const user_id = userLocalData?.user_id;
   const user_token = userLocalData?.user_token;
 
   const fetchData = useCallback(async () => {
     try {
+      const userData = await axios.get(
+        `http://localhost:8000/api/player/getPlayer/${username}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user_token}`,
+          },
+        }
+      );
+
+      setUserCoins(userData.data.coins);
+
       const storeDataResponse = await axios.get(
         "http://localhost:8000/api/store/getItems"
       );
@@ -19,7 +32,7 @@ export default function Store() {
     } catch (error) {
       console.error("Error while fetching store data: ", error);
     }
-  }, []);
+  }, [user_token, username]);
 
   useEffect(() => {
     fetchData();
@@ -43,6 +56,8 @@ export default function Store() {
         }
       );
 
+      await fetchData();
+
       setMessage("Item added to your inventory!");
     } catch (error) {
       console.error("Error while purchasing item: ", error);
@@ -53,6 +68,9 @@ export default function Store() {
   return (
     <>
       <div className="store-container m-4">
+        <div className="fixed top-0 right-0 p-4 m-4 bg-neutral-800 text-white text-md font-semibold border drop-shadow-md rounded-lg">
+          <p>Coins: {userCoins}</p>
+        </div>
         <div className="store-items-data bg-neutral-900 border rounded-md p-4">
           {storeData.length === 0 ? (
             <p>Some error occurred while loading store items.</p>
