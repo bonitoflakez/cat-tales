@@ -16,7 +16,7 @@ export const claimTimeCalculator = (lastClaimTimeResponse) => {
   const formattedNextClaimTime = `${formattedHours}:${formattedMinutes} ${amPm}`;
 
   if (isNaN(formattedHours) || isNaN(formattedMinutes)) {
-    return `00:00 --`;
+    return `NOW!!`;
   }
 
   return formattedNextClaimTime;

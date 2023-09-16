@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import saveUser from "../middleware/userCheck";
 import { login, signUp } from "../controllers/userAuth.controller";
 

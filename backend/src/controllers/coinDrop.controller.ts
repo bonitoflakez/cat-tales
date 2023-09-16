@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import pool from "../models/db";
 
-interface coins {
+interface Coins {
   amount: number;
 }
 
@@ -17,99 +17,124 @@ function checkLastClaimTime(lastClaimTime: Date): boolean {
   return hoursDiff >= 24;
 }
 
-export const dropDailyCoins = async (req: Request, res: Response) => {
-  const client = await pool.connect();
-  try {
-    const { user_id } = req.body;
+export const dropDailyCoins = (req: Request, res: Response) => {
+  const client = pool.connect();
 
-    await client.query("BEGIN");
+  const { user_id } = req.body;
 
-    if (!user_id) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({
-        message: "Invalid user id",
-        status: "failed",
-      });
-    }
-
-    const userQuery =
-      "SELECT user_id, last_claim_time FROM players WHERE user_id = $1";
-    const userValue = [user_id];
-    const userResult = await client.query(userQuery, userValue);
-
-    if (userResult.rowCount === 0) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({
-        message: "Invalid user",
-        status: "failed",
-      });
-    }
-
-    const userRecord = userResult.rows[0];
-    const lastClaimTime = userRecord.last_claim_time;
-
-    if (lastClaimTime && !checkLastClaimTime(lastClaimTime)) {
-      await client.query("ROLLBACK");
-      return res.status(200).json({
-        message: "Coins already claimed",
-        last_claim_time: lastClaimTime,
-        status: "already_claimed",
-      });
-    }
-
-    await client.query("COMMIT");
-
-    return res.status(200).json({
-      message: "Daily coin reward available",
-      status: "ready_to_claim",
+  if (!user_id) {
+    return res.status(403).json({
+      message: "User ID missing",
     });
-  } catch (err) {
-    console.error("Error getting coins amount:", err);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
-  } finally {
-    client.release();
   }
+
+  client
+    .then(async (client) => {
+      try {
+        await client.query("BEGIN");
+
+        if (!user_id) {
+          await client.query("ROLLBACK");
+          return res.status(400).json({
+            message: "Invalid user id",
+            status: "failed",
+          });
+        }
+
+        const userQuery =
+          "SELECT user_id, last_claim_time FROM players WHERE user_id = $1";
+        const userValue = [user_id];
+        const userResult = await client.query(userQuery, userValue);
+
+        if (userResult.rowCount === 0) {
+          await client.query("ROLLBACK");
+          return res.status(400).json({
+            message: "Invalid user",
+            status: "failed",
+          });
+        }
+
+        const userRecord = userResult.rows[0];
+        const lastClaimTime = userRecord.last_claim_time;
+
+        if (lastClaimTime && !checkLastClaimTime(lastClaimTime)) {
+          await client.query("ROLLBACK");
+          return res.status(200).json({
+            message: "Coins already claimed",
+            last_claim_time: lastClaimTime,
+            status: "already_claimed",
+          });
+        }
+
+        await client.query("COMMIT");
+
+        return res.status(200).json({
+          message: "Daily coin reward available",
+          status: "ready_to_claim",
+        });
+      } catch (err) {
+        console.error("Error getting coins amount:", err);
+        return res.status(500).json({
+          message: "Internal server error",
+        });
+      } finally {
+        client.release();
+      }
+    })
+    .catch((error) => {
+      console.error("Error acquiring a database connection:", error);
+      res.status(500).json({
+        message: "Internal server error",
+      });
+    });
 };
 
-export const claimRewardCoins = async (req: Request, res: Response) => {
-  const client = await pool.connect();
+export const claimRewardCoins = (req: Request, res: Response) => {
+  const client = pool.connect();
 
-  try {
-    const { user_id } = req.body;
+  const { user_id } = req.body;
 
-    if (!user_id) {
-      res.status(400).json({
-        message: "Something went wrong while claiming reward coins",
-        status: "failed",
-      });
-    }
-
-    await client.query("BEGIN");
-
-    const coins: coins = {
-      amount: getRandCoins(),
-    };
-
-    const updateLastClaimTimeQuery =
-      "UPDATE players SET last_claim_time = $1 WHERE user_id = $2";
-    const updateLastclaimTimeValues = [new Date(), user_id];
-    await client.query(updateLastClaimTimeQuery, updateLastclaimTimeValues);
-
-    await client.query("COMMIT");
-
-    res.status(200).json({
-      message: "Claimed successfully!",
-      coins,
-      status: "claimed",
+  if (!user_id) {
+    res.status(400).json({
+      message: "Something went wrong while claiming reward coins",
+      status: "failed",
     });
-  } catch (err) {
-    console.error("Error getting coins amount:", err);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
-  } finally {
-    client.release();
   }
+
+  client
+    .then(async (client) => {
+      try {
+        await client.query("BEGIN");
+
+        const coins: Coins = {
+          amount: getRandCoins(),
+        };
+
+        const updateLastClaimTimeQuery =
+          "UPDATE players SET last_claim_time = $1 WHERE user_id = $2";
+        const updateLastclaimTimeValues = [new Date(), user_id];
+        await client.query(updateLastClaimTimeQuery, updateLastclaimTimeValues);
+
+        await client.query("COMMIT");
+
+        res.status(200).json({
+          message: "Claimed successfully!",
+          coins,
+          status: "claimed",
+        });
+      } catch (err) {
+        console.error("Error getting coins amount:", err);
+        return res.status(500).json({
+          message: "Internal server error",
+        });
+      } finally {
+        client.release();
+      }
+    })
+    .catch((error) => {
+      console.error("Error while acquiring a database connection:", error);
+      res.status(500).json({
+        message: "Internal server error",
+      });
+    });
 };

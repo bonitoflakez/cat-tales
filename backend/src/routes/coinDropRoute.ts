@@ -1,10 +1,11 @@
 import express from "express";
 
+import verifyToken from "../middleware/tokenVerify";
+
 import {
   dropDailyCoins,
   claimRewardCoins,
 } from "../controllers/coinDrop.controller";
-import verifyToken from "../middleware/tokenVerify";
 
 const router = express.Router();
 

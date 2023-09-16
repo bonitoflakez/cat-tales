@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
+import { handleSubmit } from "../utils/Auth.util";
 
 export default function Auth() {
   const [username, setUsername] = useState("");
@@ -9,45 +10,17 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const apiUrl = isLogin
-      ? "http://localhost:8000/api/auth/login"
-      : "http://localhost:8000/api/auth/signup";
-
-    const data = isLogin
-      ? { username, password }
-      : { username, email, password };
-
-    try {
-      const response = await axios.post(apiUrl, data);
-
-      if (response.data.authStatus === "authorized") {
-        const token = response.data.token;
-
-        const userData = {
-          user_token: token,
-          user_name: username,
-          user_id: response.data.user_id,
-        };
-
-        localStorage.setItem("userData", JSON.stringify(userData));
-
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="p-8 rounded shadow-md">
         <h2 className="text-2xl font-semibold mb-4">
           {isLogin ? "Login" : "Sign Up"}
         </h2>
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={(e) =>
+            handleSubmit(e, isLogin, username, email, password, navigate)
+          }
+        >
           {!isLogin && (
             <div className="mb-4">
               <label htmlFor="email" className="block text-gray-600">

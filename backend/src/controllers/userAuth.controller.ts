@@ -8,129 +8,146 @@ import pool from "../models/db";
 
 dotenv.config();
 
-export const signUp = async (req: Request, res: Response) => {
-  const client = await pool.connect();
-  try {
-    const { username, email, password } = req.body;
+export const signUp = (req: Request, res: Response) => {
+  const client = pool.connect();
+  const { username, email, password } = req.body;
 
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        message: "Please fill all the fields",
-      });
-    }
-
-    await client.query("BEGIN");
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user_id = uuidv4();
-
-    const insertUserQuery =
-      "INSERT INTO userInfo (username, email, password, user_id) VALUES ($1, $2, $3, $4) RETURNING *";
-    const insertUserValues = [username, email, hashedPassword, user_id];
-
-    const {
-      rows: [user],
-    } = await client.query(insertUserQuery, insertUserValues);
-
-    if (!user) {
-      await client.query("ROLLBACK");
-
-      return res.status(401).send({
-        authStatus: "unable to register user",
-        message: "Some error occurred",
-      });
-    }
-
-    const insertPlayerQuery =
-      "INSERT INTO players (username, user_id) VALUES ($1, $2)";
-    const insertPlayerValues = [user.username, user_id];
-    await client.query(insertPlayerQuery, insertPlayerValues);
-
-    const insertCurrencyQuery =
-      "INSERT INTO currency (user_id, coins) VALUES ($1, $2)";
-    const insertCurrencyValues = [user_id, 1000];
-    await client.query(insertCurrencyQuery, insertCurrencyValues);
-
-    await client.query("COMMIT");
-
-    return res.status(201).send({
-      authStatus: "user registered",
-      message: {
-        username: user.username,
-        email: user.email,
-        user_id: user.user_id,
-        coins: "1000 coins added as signup reward",
-      },
+  if (!username || !email || !password) {
+    return res.status(400).json({
+      message: "Please fill all the fields",
     });
-  } catch (err) {
-    console.error("Error while registering user:", err);
-    res.status(500).send({ message: "Internal server error" });
-  } finally {
-    client.release();
   }
-};
 
-export const login = async (req: Request, res: Response) => {
-  const client = await pool.connect();
-  try {
-    const { username, password } = req.body;
+  client
+    .then(async (client) => {
+      try {
+        await client.query("BEGIN");
 
-    if (!username || !password) {
-      return res.status(400).json({
-        message: "Please fill all the fields",
-      });
-    }
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-    const getUserQuery = "SELECT * FROM userInfo WHERE username = $1";
-    const getUserValues = [username];
+        const user_id = uuidv4();
 
-    const {
-      rows: [userData],
-    } = await client.query(getUserQuery, getUserValues);
+        const insertUserQuery =
+          "INSERT INTO userInfo (username, email, password, user_id) VALUES ($1, $2, $3, $4) RETURNING *";
+        const insertUserValues = [username, email, hashedPassword, user_id];
 
-    if (userData) {
-      const isSame = await bcrypt.compare(password, userData.password);
+        const {
+          rows: [user],
+        } = await client.query(insertUserQuery, insertUserValues);
 
-      if (isSame) {
-        const token = jwt.sign(
-          {
-            id: userData.user_id,
-          },
-          process.env.SECRET as Secret,
-          {
-            expiresIn: 1 * 24 * 60 * 60 * 1000,
-          }
-        );
+        if (!user) {
+          await client.query("ROLLBACK");
 
-        res.cookie("jwt", token, {
-          maxAge: 1 * 24 * 60 * 60,
-          httpOnly: true,
-        });
+          return res.status(401).send({
+            authStatus: "unable to register user",
+            message: "Some error occurred",
+          });
+        }
+
+        const insertPlayerQuery =
+          "INSERT INTO players (username, user_id) VALUES ($1, $2)";
+        const insertPlayerValues = [user.username, user_id];
+        await client.query(insertPlayerQuery, insertPlayerValues);
+
+        const insertCurrencyQuery =
+          "INSERT INTO currency (user_id, coins) VALUES ($1, $2)";
+        const insertCurrencyValues = [user_id, 1000];
+        await client.query(insertCurrencyQuery, insertCurrencyValues);
+
+        await client.query("COMMIT");
 
         return res.status(201).send({
-          authStatus: "authorized",
-          username: userData.username,
-          email: userData.email,
-          user_id: userData.user_id,
-          token: token,
+          authStatus: "user registered",
+          message: {
+            username: user.username,
+            email: user.email,
+            user_id: user.user_id,
+            coins: "1000 coins added as signup reward",
+          },
         });
-      } else {
-        return res.status(401).send({
-          authStatus: "unauthorized",
-          message: "Invalid Password!",
-        });
+      } catch (err) {
+        console.error("Error while registering user:", err);
+        res.status(500).send({ message: "Internal server error" });
+      } finally {
+        client.release();
       }
-    } else {
-      return res.status(401).send({
-        authStatus: "unauthorized",
-        message: "Invalid user data",
+    })
+    .catch((error) => {
+      console.error("Error acquiring a database client:", error);
+      res.status(500).send({
+        message: "Internal server error",
       });
-    }
-  } catch (err) {
-    console.error("Error while logging in:", err);
-    res.status(500).send({ message: "Internal server error" });
-  } finally {
-    client.release();
+    });
+};
+
+export const login = (req: Request, res: Response) => {
+  const client = pool.connect();
+
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({
+      message: "Please fill all the fields",
+    });
   }
+
+  client
+    .then(async (client) => {
+      try {
+        const getUserQuery = "SELECT * FROM userInfo WHERE username = $1";
+        const getUserValues = [username];
+
+        const {
+          rows: [userData],
+        } = await client.query(getUserQuery, getUserValues);
+
+        if (userData) {
+          const isSame = await bcrypt.compare(password, userData.password);
+
+          if (isSame) {
+            const token = jwt.sign(
+              {
+                id: userData.user_id,
+              },
+              process.env.SECRET as Secret,
+              {
+                expiresIn: 1 * 24 * 60 * 60 * 1000,
+              }
+            );
+
+            res.cookie("jwt", token, {
+              maxAge: 1 * 24 * 60 * 60,
+              httpOnly: true,
+            });
+
+            res.status(201).send({
+              authStatus: "authorized",
+              username: userData.username,
+              email: userData.email,
+              user_id: userData.user_id,
+              token: token,
+            });
+          } else {
+            res.status(401).send({
+              authStatus: "unauthorized",
+              message: "Invalid Password!",
+            });
+          }
+        } else {
+          res.status(401).send({
+            authStatus: "unauthorized",
+            message: "Invalid user data",
+          });
+        }
+      } catch (err) {
+        console.error("Error while logging in:", err);
+        res.status(500).send({ message: "Internal server error" });
+      } finally {
+        client.release();
+      }
+    })
+    .catch((error) => {
+      console.error("Error acquiring a database client:", error);
+      res.status(500).send({ message: "Internal server error" });
+    });
 };

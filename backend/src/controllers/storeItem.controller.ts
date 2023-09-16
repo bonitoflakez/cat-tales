@@ -20,108 +20,118 @@ import {
   getCachedItemData,
 } from "../helpers/storeItem.helper";
 
-export const getStoreItems = async (req: Request, res: Response) => {
-  try {
-    const getItemDetails = (items: ItemType[]) =>
-      items.map((item) => {
-        const cachedItemData = getCachedItemData(item.name);
-        if (cachedItemData) {
-          return {
-            name: item.name,
-            type: item.type,
-            type_id: item.type_id,
-            rarity: cachedItemData.rarity,
-            rarity_id:
-              rarities.find((r) => r.itemRarity === cachedItemData.rarity)
-                ?.id || 1,
-            price: cachedItemData.price,
-          };
-        } else {
-          const rarityData = getRandomRarity();
-          const price = calculatePrice(item.price, rarityData.itemRarity);
-          cacheItemData(item.name, rarityData.itemRarity, price);
-          return {
-            name: item.name,
-            type: item.type,
-            type_id: item.type_id,
-            rarity: rarityData.itemRarity,
-            rarity_id: rarityData.id,
-            price: price,
-          };
-        }
-      });
-
-    const storeItems: ItemType[] = [
-      ...Food,
-      ...Toys,
-      ...Charms,
-      ...Treats,
-      ...Potion,
-      ...Costume,
-      ...GroomingSupplies,
-    ];
-
-    const storeDataWithDetails = getItemDetails(storeItems);  
-
-    return res.status(200).json({
-      storeDataWithDetails
+export const getStoreItems = (req: Request, res: Response) => {
+  const getItemDetails = (items: ItemType[]) =>
+    items.map((item) => {
+      const cachedItemData = getCachedItemData(item.name);
+      if (cachedItemData) {
+        return {
+          name: item.name,
+          type: item.type,
+          type_id: item.type_id,
+          rarity: cachedItemData.rarity,
+          rarity_id:
+            rarities.find((r) => r.itemRarity === cachedItemData.rarity)?.id ??
+            1,
+          price: cachedItemData.price,
+        };
+      } else {
+        const rarityData = getRandomRarity();
+        const price = calculatePrice(item.price, rarityData.itemRarity);
+        cacheItemData(item.name, rarityData.itemRarity, price);
+        return {
+          name: item.name,
+          type: item.type,
+          type_id: item.type_id,
+          rarity: rarityData.itemRarity,
+          rarity_id: rarityData.id,
+          price: price,
+        };
+      }
     });
-  } catch (err) {
-    console.error("Error fetching store items:", err);
-    return res.status(500).json({ message: "Internal server error" });
+
+  const storeItems: ItemType[] = [
+    ...Food,
+    ...Toys,
+    ...Charms,
+    ...Treats,
+    ...Potion,
+    ...Costume,
+    ...GroomingSupplies,
+  ];
+
+  const storeDataWithDetails = getItemDetails(storeItems);
+
+  if (!storeDataWithDetails) {
+    return res.status(401).json({
+      message: "Something went wrong while processing data",
+    });
   }
+
+  return res.status(200).json({
+    storeDataWithDetails,
+  });
 };
 
+export const buyStoreItem = (req: Request, res: Response) => {
+  const client = pool.connect();
 
-export const buyStoreItem = async (req: Request, res: Response) => {
-  const client = await pool.connect();
+  client
+    .then(async (client) => {
+      try {
+        const { name, type, rarity, price, user_id } = req.body;
 
-  try {
-    const { name, type, rarity, price, user_id } = req.body;
+        await client.query("BEGIN");
 
-    await client.query("BEGIN");
+        const getUserCoinsQuery =
+          "SELECT coins FROM currency WHERE user_id = $1";
+        const getUserCoinsValues = [user_id];
+        const userCoinsResult = await client.query(
+          getUserCoinsQuery,
+          getUserCoinsValues
+        );
 
-    const getUserCoinsQuery = "SELECT coins FROM currency WHERE user_id = $1";
-    const getUserCoinsValues = [user_id];
-    const userCoinsResult = await client.query(
-      getUserCoinsQuery,
-      getUserCoinsValues
-    );
+        if (userCoinsResult.rows.length === 0) {
+          await client.query("ROLLBACK");
+          return res.status(404).json({ message: "Invalid user" });
+        }
 
-    if (userCoinsResult.rows.length === 0) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ message: "Invalid user" });
-    }
+        const userCoins = userCoinsResult.rows[0].coins;
 
-    const userCoins = userCoinsResult.rows[0].coins;
+        const remainingCoins = userCoins - price;
 
-    const remainingCoins = userCoins - price;
+        if (remainingCoins < 0) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ message: "Insufficient coins to buy this item" });
+        }
 
-    if (remainingCoins < 0) {
-      await client.query("ROLLBACK");
-      return res
-        .status(400)
-        .json({ message: "Insufficient coins to buy this item" });
-    }
+        const updateCoinsQuery =
+          "UPDATE currency SET coins = $1 WHERE user_id = $2";
+        const updateCoinsValues = [remainingCoins, user_id];
+        await client.query(updateCoinsQuery, updateCoinsValues);
 
-    const updateCoinsQuery =
-      "UPDATE currency SET coins = $1 WHERE user_id = $2";
-    const updateCoinsValues = [remainingCoins, user_id];
-    await client.query(updateCoinsQuery, updateCoinsValues);
+        const insertQuery =
+          "INSERT INTO items (name, type, rarity, user_id) VALUES ($1, $2, $3, $4)";
+        const insertValues = [name, type, rarity, user_id];
+        await client.query(insertQuery, insertValues);
 
-    const insertQuery =
-      "INSERT INTO items (name, type, rarity, user_id) VALUES ($1, $2, $3, $4)";
-    const insertValues = [name, type, rarity, user_id];
-    await client.query(insertQuery, insertValues);
+        await client.query("COMMIT");
 
-    await client.query("COMMIT");
-
-    return res.status(201).json({ message: "Item bought successfully" });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("Error while grabbing drop item:", err);
-    return res.status(500).json({ message: "Internal server error" });
-  } finally {
-    client.release();
-  }
+        return res.status(201).json({ message: "Item bought successfully" });
+      } catch (err) {
+        await client.query("ROLLBACK");
+        console.error("Error while grabbing drop item:", err);
+        return res.status(500).json({ message: "Internal server error" });
+      } finally {
+        client.release();
+      }
+    })
+    .catch((error) => {
+      console.error("Error while acquiring a database connection:", error);
+      return res.status(500).json({
+        message: "Internal server error",
+      });
+    });
 };
