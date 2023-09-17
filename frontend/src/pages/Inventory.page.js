@@ -6,6 +6,12 @@ import {
   InventoryItemsInfo,
 } from "../components/Inventory.components";
 
+import {
+  fetchInventoryData,
+  handleUseItem,
+  handleUseItemClick,
+} from "../utils/Inventory.util";
+
 export default function Inventory() {
   const [userCatsData, setUserCatsData] = useState([]);
   const [userItemsData, setUserItemsData] = useState([]);
@@ -21,74 +27,13 @@ export default function Inventory() {
   const user_id = userLocalData?.user_id;
   const user_token = userLocalData?.user_token;
 
-  const fetchData = useCallback(async () => {
-    try {
-      const catResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayerCat/${user_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user_token}`,
-          },
-        }
-      );
-      setUserCatsData(catResponse.data);
-
-      const itemResponse = await axios.get(
-        `http://localhost:8000/api/player/getPlayerItem/${user_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user_token}`,
-          },
-        }
-      );
-      setUserItemsData(itemResponse.data);
-    } catch (error) {
-      console.error("Error while fetching user details", error);
-    }
+  const fetchDataCallBack = useCallback(() => {
+    fetchInventoryData(user_token, user_id, setUserCatsData, setUserItemsData);
   }, [user_id, user_token]);
 
   useEffect(() => {
-    fetchData();
-  }, [username, fetchData]);
-
-  const handleUseItemClick = (item) => {
-    setSelectedItem(item);
-    setIsModalOpen(true);
-  };
-
-  const handleUseItem = async () => {
-    if (!catName || !selectedItem) {
-      setMessage("Please select an item and provide a cat name.");
-      return;
-    }
-
-    try {
-      await axios.post(
-        "http://localhost:8000/api/player/useItem",
-        {
-          itemName: selectedItem.name,
-          type: selectedItem.type,
-          rarity: selectedItem.rarity,
-          userId: selectedItem.user_id,
-          catName: catName,
-          catId: catId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user_token}`,
-          },
-        }
-      );
-
-      setIsModalOpen(false);
-      setMessage("Item used successfully!");
-
-      fetchData();
-    } catch (error) {
-      console.error("Error while using item", error);
-      setMessage("Error while using item");
-    }
-  };
+    fetchDataCallBack();
+  }, [username, fetchDataCallBack]);
 
   return (
     <div className="inventory-container m-4">
@@ -99,8 +44,18 @@ export default function Inventory() {
         <div className="inventory-right bg-neutral-900 border rounded-md p-4">
           <InventoryItemsInfo
             userItemsData={userItemsData}
-            handleUseItem={handleUseItem}
-            handleUseItemClick={handleUseItemClick}
+            handleUseItem={handleUseItem(
+              catName,
+              selectedItem,
+              setMessage,
+              catId,
+              user_token,
+              setIsModalOpen,
+              fetchDataCallBack
+            )}
+            handleUseItemClick={(item) =>
+              handleUseItemClick(item, setSelectedItem, setIsModalOpen)
+            }
             selectedItem={selectedItem}
             setIsModalOpen={setIsModalOpen}
             isModalOpen={isModalOpen}
